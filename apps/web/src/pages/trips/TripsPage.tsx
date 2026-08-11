@@ -244,6 +244,9 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
   const { data: vehicleData } = useVehicles({ page: 1, limit: 100 });
   const { data: driverData } = useDrivers({ page: 1, limit: 100 });
   const { data: customerData } = useCustomers({ page: 1, limit: 100 });
+  const { data: allTripsData } = useTrips({ page: 1, limit: 200 });
+
+  const existingTrips = Array.isArray(allTripsData?.items) ? allTripsData.items : [];
 
   const vehicles = Array.isArray(vehicleData?.items)
     ? vehicleData.items
@@ -280,11 +283,46 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
   const now = new Date();
   const minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
-  const availableVehicles = vehicles.filter((v: any) => v.status === 'active');
-  const busyVehicles = vehicles.filter((v: any) => v.status !== 'active');
+  // Dynamic Date Overlap Calculation
+  const selStart = form.scheduledStart ? new Date(form.scheduledStart) : null;
+  const selEnd = form.scheduledEnd ? new Date(form.scheduledEnd) : null;
 
-  const availableDrivers = drivers.filter((d: any) => d.status === 'active');
-  const busyDrivers = drivers.filter((d: any) => d.status !== 'active');
+  const vehicleBookings: Record<string, string> = {};
+  const driverBookings: Record<string, string> = {};
+
+  existingTrips.forEach((t: any) => {
+    if (t.status === 'cancelled' || t.status === 'completed') return;
+    const tStart = t.scheduledStart ? new Date(t.scheduledStart) : new Date(t.createdAt);
+    const tEnd = t.scheduledEnd ? new Date(t.scheduledEnd) : new Date(tStart.getTime() + 86400000);
+
+    let isOverlapping = false;
+    if (selStart && selEnd) {
+      isOverlapping = tStart <= selEnd && tEnd >= selStart;
+    } else if (selStart) {
+      isOverlapping = tEnd >= selStart;
+    } else {
+      isOverlapping = t.status === 'assigned' || t.status === 'in_progress';
+    }
+
+    if (isOverlapping) {
+      if (t.vehicleId) vehicleBookings[t.vehicleId] = t.tripNumber;
+      if (t.driverId) driverBookings[t.driverId] = t.tripNumber;
+    }
+  });
+
+  const availableVehicles = vehicles.filter(
+    (v: any) => v.status === 'active' && !vehicleBookings[v.id]
+  );
+  const busyVehicles = vehicles.filter(
+    (v: any) => v.status !== 'active' || vehicleBookings[v.id]
+  );
+
+  const availableDrivers = drivers.filter(
+    (d: any) => d.status === 'active' && !driverBookings[d.id]
+  );
+  const busyDrivers = drivers.filter(
+    (d: any) => d.status !== 'active' || driverBookings[d.id]
+  );
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -355,13 +393,13 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
-            {/* Vehicle & Driver Selection — Grouped by Availability */}
+            {/* Vehicle & Driver Selection — Grouped by Availability for selected date range */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Assign Vehicle</label>
                 <select className="form-select" value={form.vehicleId} onChange={(e) => set('vehicleId', e.target.value)}>
                   <option value="">-- Select Available Vehicle --</option>
-                  <optgroup label="✓ Available Vehicles (Free)">
+                  <optgroup label="✓ Free Vehicles for Selected Dates">
                     {availableVehicles.map((v: any) => (
                       <option key={v.id} value={v.id}>
                         ✓ {v.registrationNumber} ({v.make || ''} {v.model || ''}) — Free
@@ -369,12 +407,16 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
                     ))}
                   </optgroup>
                   {busyVehicles.length > 0 && (
-                    <optgroup label="🚫 Busy / In Trip / Maintenance">
-                      {busyVehicles.map((v: any) => (
-                        <option key={v.id} value={v.id} disabled style={{ color: 'var(--color-text-dim)' }}>
-                          🚫 {v.registrationNumber} ({v.status?.replace('_', ' ')})
-                        </option>
-                      ))}
+                    <optgroup label="🚫 Busy / Booked for Selected Dates">
+                      {busyVehicles.map((v: any) => {
+                        const bookedTrip = vehicleBookings[v.id];
+                        const reason = bookedTrip ? `Booked on dates (${bookedTrip})` : v.status?.replace('_', ' ');
+                        return (
+                          <option key={v.id} value={v.id} disabled style={{ color: 'var(--color-text-dim)' }}>
+                            🚫 {v.registrationNumber} — {reason}
+                          </option>
+                        );
+                      })}
                     </optgroup>
                   )}
                 </select>
@@ -384,7 +426,7 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
                 <label className="form-label">Assign Driver</label>
                 <select className="form-select" value={form.driverId} onChange={(e) => set('driverId', e.target.value)}>
                   <option value="">-- Select Available Driver --</option>
-                  <optgroup label="✓ Available Drivers (Free)">
+                  <optgroup label="✓ Free Drivers for Selected Dates">
                     {availableDrivers.map((d: any) => (
                       <option key={d.id} value={d.id}>
                         ✓ {d.name} ({d.phone || 'No phone'}) — Available
@@ -392,12 +434,16 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
                     ))}
                   </optgroup>
                   {busyDrivers.length > 0 && (
-                    <optgroup label="🚫 On Trip / Busy">
-                      {busyDrivers.map((d: any) => (
-                        <option key={d.id} value={d.id} disabled style={{ color: 'var(--color-text-dim)' }}>
-                          🚫 {d.name} ({d.status?.replace('_', ' ')})
-                        </option>
-                      ))}
+                    <optgroup label="🚫 Busy / Booked for Selected Dates">
+                      {busyDrivers.map((d: any) => {
+                        const bookedTrip = driverBookings[d.id];
+                        const reason = bookedTrip ? `Booked on dates (${bookedTrip})` : d.status?.replace('_', ' ');
+                        return (
+                          <option key={d.id} value={d.id} disabled style={{ color: 'var(--color-text-dim)' }}>
+                            🚫 {d.name} — {reason}
+                          </option>
+                        );
+                      })}
                     </optgroup>
                   )}
                 </select>
