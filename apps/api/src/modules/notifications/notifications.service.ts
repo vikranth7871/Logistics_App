@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification, NotificationType, NotificationSeverity } from './entities/notification.entity';
@@ -18,6 +18,8 @@ export interface CreateNotificationDto {
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     @InjectRepository(Notification)
     private notifRepo: Repository<Notification>,
@@ -27,27 +29,32 @@ export class NotificationsService {
   /**
    * Persist a notification to DB and emit via WebSocket.
    */
-  async create(dto: CreateNotificationDto): Promise<Notification> {
-    const notif = this.notifRepo.create({
-      ...dto,
-      severity: dto.severity ?? NotificationSeverity.INFO,
-      isRead: false,
-    });
-    const saved = await this.notifRepo.save(notif);
+  async create(dto: CreateNotificationDto): Promise<Notification | null> {
+    try {
+      const notif = this.notifRepo.create({
+        ...dto,
+        severity: dto.severity ?? NotificationSeverity.INFO,
+        isRead: false,
+      });
+      const saved = await this.notifRepo.save(notif);
 
-    // Push real-time event to the user's socket room
-    this.gateway.sendToUser(dto.userId, {
-      id: saved.id,
-      type: saved.type,
-      title: saved.title,
-      message: saved.message,
-      severity: saved.severity,
-      entityType: saved.entityType,
-      entityId: saved.entityId,
-      createdAt: saved.createdAt,
-    });
+      // Push real-time event to the user's socket room
+      this.gateway.sendToUser(dto.userId, {
+        id: saved.id,
+        type: saved.type,
+        title: saved.title,
+        message: saved.message,
+        severity: saved.severity,
+        entityType: saved.entityType,
+        entityId: saved.entityId,
+        createdAt: saved.createdAt,
+      });
 
-    return saved;
+      return saved;
+    } catch (err: any) {
+      this.logger.warn(`Failed to create notification for user ${dto.userId}: ${err?.message || err}`);
+      return null;
+    }
   }
 
   /**
@@ -57,7 +64,13 @@ export class NotificationsService {
     userIds: string[],
     dto: Omit<CreateNotificationDto, 'userId'>,
   ): Promise<void> {
-    await Promise.all(userIds.map((userId) => this.create({ ...dto, userId })));
+    if (!userIds || userIds.length === 0) return;
+    try {
+      const uniqueIds = [...new Set(userIds)];
+      await Promise.all(uniqueIds.map((userId) => this.create({ ...dto, userId })));
+    } catch (err: any) {
+      this.logger.warn(`Failed to bulk create notifications: ${err?.message || err}`);
+    }
   }
 
   /**
@@ -77,6 +90,7 @@ export class NotificationsService {
    * Count unread notifications for a user.
    */
   async getUnreadCount(userId: string): Promise<number> {
+    if (!userId) return 0;
     return this.notifRepo.count({ where: { userId, isRead: false } });
   }
 
@@ -96,14 +110,29 @@ export class NotificationsService {
 
   /**
    * Fetch users with a given role in a company (used by triggers).
-   * Returns user IDs to notify.
+   * Returns user IDs to notify. Safely constructed via QueryBuilder.
    */
   async getUserIdsByRole(companyId: string, roles: string[]): Promise<string[]> {
-    // We query users table directly
-    const result = await this.notifRepo.query(
-      `SELECT id FROM users WHERE company_id = $1 AND role = ANY($2::text[]) AND is_active = true`,
-      [companyId, roles],
-    );
-    return result.map((r: { id: string }) => r.id);
+    if (!roles || roles.length === 0) return [];
+    try {
+      const qb = this.notifRepo.manager
+        .createQueryBuilder()
+        .select('u.id', 'id')
+        .from('users', 'u')
+        .where('u.is_active = true');
+
+      if (companyId) {
+        qb.andWhere('u.company_id = :companyId', { companyId });
+      }
+      if (roles.length > 0) {
+        qb.andWhere('u.role IN (:...roles)', { roles });
+      }
+
+      const result = await qb.getRawMany();
+      return result.map((r) => r.id);
+    } catch (err: any) {
+      this.logger.warn(`getUserIdsByRole failed: ${err?.message || err}`);
+      return [];
+    }
   }
 }

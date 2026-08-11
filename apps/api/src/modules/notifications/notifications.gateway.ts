@@ -78,6 +78,7 @@ export class NotificationsGateway
    * Send notification to a specific user.
    */
   sendToUser(userId: string, payload: NotificationPayload) {
+    if (!this.server) return;
     this.server.to(`user:${userId}`).emit('notification', payload);
   }
 
@@ -85,6 +86,7 @@ export class NotificationsGateway
    * Send notification to all users with a given role.
    */
   sendToRole(role: string, payload: NotificationPayload) {
+    if (!this.server) return;
     this.server.to(`role:${role}`).emit('notification', payload);
   }
 
@@ -92,6 +94,7 @@ export class NotificationsGateway
    * Broadcast to all connected clients.
    */
   broadcast(event: string, payload: any) {
+    if (!this.server) return;
     this.server.emit(event, payload);
   }
 
@@ -99,6 +102,7 @@ export class NotificationsGateway
    * Emit trip status update — all managers/dispatchers get this.
    */
   emitTripUpdate(tripId: string, status: string, vehicleRegNo: string) {
+    if (!this.server) return;
     this.server.to('role:admin').to('role:manager').to('role:dispatcher').emit(
       'trip_update',
       { tripId, status, vehicleRegNo, timestamp: new Date() },
