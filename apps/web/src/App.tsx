@@ -3,6 +3,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import { useAuthStore } from '@store/auth.store';
 import { wsService } from './services/websocket.service';
 
+// ── Admin / General layouts & pages ─────────────────────────────────────────
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const AppLayout = lazy(() => import('./components/layout/AppLayout'));
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
@@ -20,9 +21,27 @@ const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
 const UsersPage = lazy(() => import('./pages/users/UsersPage'));
 const AuditPage = lazy(() => import('./pages/audit/AuditPage'));
 
+// ── Driver Portal pages ──────────────────────────────────────────────────────
+const DriverLayout = lazy(() => import('./components/layout/DriverLayout'));
+const DriverDashboardPage = lazy(() => import('./pages/driver/DriverDashboardPage'));
+const MyTripsPage = lazy(() => import('./pages/driver/MyTripsPage'));
+const MyExpensesPage = lazy(() => import('./pages/driver/MyExpensesPage'));
+const MyFuelPage = lazy(() => import('./pages/driver/MyFuelPage'));
+const MyProfilePage = lazy(() => import('./pages/driver/MyProfilePage'));
+
+// ── Auth guards ──────────────────────────────────────────────────────────────
+
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+/** Redirect drivers to their portal, keep all other roles in admin layout */
+function RoleGate({ children }: { children: JSX.Element }) {
+  const { isAuthenticated, user } = useAuthStore();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.role === 'driver') return <Navigate to="/driver/dashboard" replace />;
+  return children;
 }
 
 function App() {
@@ -40,14 +59,16 @@ function App() {
   return (
     <Suspense fallback={<div className="app-loading">Loading…</div>}>
       <Routes>
+        {/* ── Public ── */}
         <Route path="/login" element={<LoginPage />} />
 
+        {/* ── Admin / General ERP (non-driver roles) ── */}
         <Route
           path="/"
           element={
-            <RequireAuth>
+            <RoleGate>
               <AppLayout />
-            </RequireAuth>
+            </RoleGate>
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
@@ -67,6 +88,24 @@ function App() {
           <Route path="audit" element={<AuditPage />} />
         </Route>
 
+        {/* ── Driver Portal ── */}
+        <Route
+          path="/driver"
+          element={
+            <RequireAuth>
+              <DriverLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<Navigate to="/driver/dashboard" replace />} />
+          <Route path="dashboard" element={<DriverDashboardPage />} />
+          <Route path="trips" element={<MyTripsPage />} />
+          <Route path="expenses" element={<MyExpensesPage />} />
+          <Route path="fuel" element={<MyFuelPage />} />
+          <Route path="profile" element={<MyProfilePage />} />
+        </Route>
+
+        {/* ── Fallback ── */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Suspense>
