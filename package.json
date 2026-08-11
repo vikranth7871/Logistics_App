@@ -1,0 +1,35 @@
+{
+  "name": "lorry-erp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lorry Fleet Management ERP — Monorepo",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "pnpm --filter api run start:dev",
+    "dev:web": "pnpm --filter lorry-erp-web run dev",
+    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
+    "build:api": "pnpm --filter api run build",
+    "build:web": "pnpm --filter lorry-erp-web run build",
+    "test:api": "pnpm --filter api run test",
+    "test:web": "pnpm --filter web run test",
+    "lint": "pnpm -r run lint",
+    "docker:dev": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "db:migrate": "pnpm --filter api run db:migrate",
+    "db:seed": "pnpm --filter api run db:seed"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.5",
+    "concurrently": "^8.2.2",
+    "ts-node": "^10.9.2",
+    "typeorm": "^0.3.20",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
