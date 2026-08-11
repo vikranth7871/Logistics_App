@@ -118,6 +118,22 @@ export class TripsService {
     return trip;
   }
 
+  // ── UPDATE ───────────────────────────────────────────────────────
+  async update(id: string, dto: any, companyId: string) {
+    const trip = await this.findOne(id, companyId);
+    if (dto.startOdometer !== undefined) {
+      trip.startOdometer = dto.startOdometer ? parseFloat(dto.startOdometer) : null;
+    }
+    if (dto.endOdometer !== undefined) {
+      trip.endOdometer = dto.endOdometer ? parseFloat(dto.endOdometer) : null;
+      if (trip.endOdometer && trip.startOdometer) {
+        trip.distanceKm = trip.endOdometer - trip.startOdometer;
+      }
+    }
+    Object.assign(trip, dto);
+    return this.tripRepo.save(trip);
+  }
+
   // ── CREATE ───────────────────────────────────────────────────────
   async create(dto: CreateTripDto, companyId: string, userId: string) {
     const tripNumber = await this.generateTripNumber(companyId);

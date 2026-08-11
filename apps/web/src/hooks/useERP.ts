@@ -255,6 +255,20 @@ export function useCreateTrip() {
   });
 }
 
+export function useUpdateTrip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      tripApi.updateTrip(id, data),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: QK.trips.detail(id) });
+      qc.invalidateQueries({ queryKey: QK.trips.all });
+      toast.success('Trip updated');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
 export function useStartTrip() {
   const qc = useQueryClient();
   return useMutation({

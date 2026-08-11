@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
-import { useTrip, useStartTrip, useDeliverTrip, useCompleteTrip, useUploadDeliveryProof } from '@hooks/useERP';
-import { useState } from 'react';
+import { useTrip, useStartTrip, useDeliverTrip, useCompleteTrip, useUploadDeliveryProof, useUpdateTrip } from '@hooks/useERP';
+import { useState, useEffect } from 'react';
 import {
   TruckIcon,
   CheckCircleIcon,
@@ -31,10 +31,30 @@ export default function TripDetailPage() {
   const startMutation = useStartTrip();
   const deliverMutation = useDeliverTrip();
   const completeMutation = useCompleteTrip();
+  const updateMutation = useUpdateTrip();
   const uploadProofMutation = useUploadDeliveryProof();
 
   const [odometer, setOdometer] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (trip) {
+      const existing = trip.status === 'assigned' ? trip.startOdometer : trip.endOdometer || trip.startOdometer;
+      if (existing && !odometer) {
+        setOdometer(String(existing));
+      }
+    }
+  }, [trip]);
+
+  const handleSaveOdometer = async () => {
+    if (!odometer || !trip) return;
+    const val = parseFloat(odometer);
+    if (trip.status === 'assigned') {
+      await updateMutation.mutateAsync({ id: id!, data: { startOdometer: val } });
+    } else {
+      await updateMutation.mutateAsync({ id: id!, data: { endOdometer: val } });
+    }
+  };
 
   if (isLoading) return <div className="spinner-page"><div className="spinner" /></div>;
 
@@ -200,21 +220,33 @@ export default function TripDetailPage() {
           </div>
 
           {/* Odometer input for transitions */}
-          {['assigned', 'in_progress', 'delivered'].includes(trip.status) && (
+          {['assigned', 'in_progress', 'delivered', 'completed'].includes(trip.status) && (
             <div className="card">
               <div className="card-title" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <GaugeIcon size={18} color="var(--color-warning)" />
                 {trip.status === 'assigned' ? 'Start Odometer Reading' : 'End Odometer Reading'}
               </div>
-              <input
-                type="number"
-                className="form-input"
-                value={odometer}
-                onChange={(e) => setOdometer(e.target.value)}
-                placeholder={trip.status === 'assigned' ? 'Start odometer (km)' : 'End odometer (km)'}
-              />
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={odometer}
+                  onChange={(e) => setOdometer(e.target.value)}
+                  placeholder={trip.status === 'assigned' ? 'Start odometer (km)' : 'End odometer (km)'}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  disabled={updateMutation.isPending || !odometer}
+                  onClick={handleSaveOdometer}
+                  style={{ whiteSpace: 'nowrap', padding: '8px 14px', height: '38px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <GaugeIcon size={14} /> {updateMutation.isPending ? 'Saving…' : 'Save Reading'}
+                </button>
+              </div>
               <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
-                Optional — used to calculate total trip distance & fleet metrics
+                Used to calculate total trip distance & fleet metrics
               </p>
             </div>
           )}

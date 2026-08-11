@@ -51,6 +51,17 @@ export class TripsController {
     return this.tripsService.findOne(id, user.companyId);
   }
 
+  @Put(':id')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.DISPATCHER, UserRole.DRIVER)
+  @ApiOperation({ summary: 'Update trip details' })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: any,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.tripsService.update(id, dto, user.companyId);
+  }
+
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.DISPATCHER)
   @ApiOperation({ summary: 'Create a new trip (draft status)' })
