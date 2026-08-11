@@ -291,13 +291,16 @@ export class TripsService {
 
   // ── UPLOAD PROOF ─────────────────────────────────────────────────
   async uploadDeliveryProof(id: string, file: Express.Multer.File, companyId: string) {
+    if (!file || !file.buffer) {
+      throw new BadRequestException('Please select a file to upload');
+    }
     const trip = await this.findOne(id, companyId);
 
     const result = await this.storageService.uploadFile(
       file.buffer,
-      file.originalname,
+      file.originalname || 'proof',
       `trips/${id}/proof`,
-      file.mimetype,
+      file.mimetype || 'image/png',
     );
 
     trip.deliveryProofUrl = result.url;

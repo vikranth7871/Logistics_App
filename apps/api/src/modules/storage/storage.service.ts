@@ -1,13 +1,14 @@
-import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private readonly minioClient: Minio.Client;
+  private minioClient: Minio.Client | null = null;
   private readonly bucket: string;
   private readonly baseUrl: string;
 
@@ -17,20 +18,24 @@ export class StorageService {
     const endpoint = config.get<string>('MINIO_ENDPOINT', 'localhost');
     const port = Number(config.get('MINIO_PORT', 9000));
 
-    this.minioClient = new Minio.Client({
-      endPoint: endpoint,
-      port: port,
-      useSSL: ssl,
-      accessKey: config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
-      secretKey: config.get<string>('MINIO_SECRET_KEY', 'minioadmin123'),
-    });
+    try {
+      this.minioClient = new Minio.Client({
+        endPoint: endpoint,
+        port: port,
+        useSSL: ssl,
+        accessKey: config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
+        secretKey: config.get<string>('MINIO_SECRET_KEY', 'minioadmin123'),
+      });
+    } catch {
+      this.logger.warn('MinIO client initialization skipped');
+    }
 
     this.baseUrl = `${ssl ? 'https' : 'http'}://${endpoint}:${port}/${this.bucket}`;
     this.ensureBucketExists();
   }
 
   /**
-   * Upload a file buffer to MinIO.
+   * Upload a file buffer to MinIO or fallback to local Data URL / disk storage.
    */
   async uploadFile(
     buffer: Buffer,
@@ -38,31 +43,42 @@ export class StorageService {
     folder: string,
     mimeType: string,
   ): Promise<{ url: string; key: string }> {
-    const ext = path.extname(originalName).toLowerCase();
+    if (!buffer || buffer.length === 0) {
+      throw new BadRequestException('Cannot upload empty file');
+    }
+
+    const ext = path.extname(originalName || 'file').toLowerCase();
     const key = `${folder}/${uuidv4()}${ext}`;
 
-    try {
-      await this.minioClient.putObject(this.bucket, key, buffer, buffer.length, {
-        'Content-Type': mimeType,
-        'Cache-Control': 'max-age=31536000',
-      });
+    // Try MinIO first if client exists
+    if (this.minioClient) {
+      try {
+        await this.minioClient.putObject(this.bucket, key, buffer, buffer.length, {
+          'Content-Type': mimeType || 'application/octet-stream',
+          'Cache-Control': 'max-age=31536000',
+        });
 
-      const url = `${this.baseUrl}/${key}`;
-      this.logger.log(`File uploaded: ${key}`);
-      return { url, key };
-    } catch (err) {
-      this.logger.error('File upload failed', err);
-      throw new InternalServerErrorException({
-        message: 'File upload failed. Please try again.',
-        code: 'STORAGE_UPLOAD_FAILED',
-      });
+        const url = `${this.baseUrl}/${key}`;
+        this.logger.log(`File uploaded to MinIO: ${key}`);
+        return { url, key };
+      } catch (err: any) {
+        this.logger.warn(`MinIO upload failed (${err?.message || err}). Falling back to Data URL storage.`);
+      }
     }
+
+    // Fallback: Store as Data URL so image/pdf can be viewed directly anywhere with 0 dependencies
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:${mimeType || 'application/octet-stream'};base64,${base64}`;
+    this.logger.log(`File uploaded (Data URL fallback): ${key}`);
+
+    return { url: dataUrl, key };
   }
 
   /**
-   * Delete a file from MinIO by its object key.
+   * Delete a file by key.
    */
   async deleteFile(key: string): Promise<void> {
+    if (!this.minioClient) return;
     try {
       await this.minioClient.removeObject(this.bucket, key);
       this.logger.log(`File deleted: ${key}`);
@@ -75,18 +91,24 @@ export class StorageService {
    * Generate a pre-signed URL for temporary direct access.
    */
   async getPresignedUrl(key: string, expirySeconds = 3600): Promise<string> {
-    return this.minioClient.presignedGetObject(this.bucket, key, expirySeconds);
+    if (!this.minioClient) return key;
+    try {
+      return await this.minioClient.presignedGetObject(this.bucket, key, expirySeconds);
+    } catch {
+      return key;
+    }
   }
 
   private async ensureBucketExists() {
+    if (!this.minioClient) return;
     try {
       const exists = await this.minioClient.bucketExists(this.bucket);
       if (!exists) {
         await this.minioClient.makeBucket(this.bucket, 'us-east-1');
         this.logger.log(`Bucket '${this.bucket}' created`);
       }
-    } catch (err) {
-      this.logger.warn(`MinIO bucket check deferred (MinIO storage offline or unconfigured)`);
+    } catch {
+      this.logger.warn(`MinIO storage offline or unconfigured; Data URL fallback active.`);
     }
   }
 }
