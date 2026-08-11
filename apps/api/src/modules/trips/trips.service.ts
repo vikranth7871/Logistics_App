@@ -185,6 +185,7 @@ export class TripsService {
   // ── START ────────────────────────────────────────────────────────
   async start(id: string, dto: StartTripDto, companyId: string) {
     const trip = await this.findOne(id, companyId);
+    if (trip.status === TripStatus.IN_PROGRESS) return trip;
     this.tripStateService.validateTransition(trip.status, TripStatus.IN_PROGRESS);
 
     if (trip.vehicleId) {
@@ -219,6 +220,7 @@ export class TripsService {
   // ── DELIVER ──────────────────────────────────────────────────────
   async deliver(id: string, companyId: string) {
     const trip = await this.findOne(id, companyId);
+    if (trip.status === TripStatus.DELIVERED) return trip;
     this.tripStateService.validateTransition(trip.status, TripStatus.DELIVERED);
 
     trip.status = TripStatus.DELIVERED;
@@ -245,6 +247,7 @@ export class TripsService {
   // ── COMPLETE ─────────────────────────────────────────────────────
   async complete(id: string, dto: CompleteTripDto, companyId: string) {
     const trip = await this.findOne(id, companyId);
+    if (trip.status === TripStatus.COMPLETED) return trip;
     this.tripStateService.validateTransition(trip.status, TripStatus.COMPLETED);
 
     if (trip.vehicleId) {
