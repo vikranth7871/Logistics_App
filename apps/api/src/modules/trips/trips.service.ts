@@ -308,6 +308,22 @@ export class TripsService {
     return this.tripRepo.save(trip);
   }
 
+  // ── REMOVE / DELETE ──────────────────────────────────────────────
+  async remove(id: string, companyId: string) {
+    const trip = await this.findOne(id, companyId);
+
+    // Release vehicle and driver if active
+    if (trip.vehicleId && [TripStatus.ASSIGNED, TripStatus.IN_PROGRESS].includes(trip.status)) {
+      await this.vehicleRepo.update(trip.vehicleId, { status: VehicleStatus.ACTIVE });
+    }
+    if (trip.driverId && [TripStatus.ASSIGNED, TripStatus.IN_PROGRESS].includes(trip.status)) {
+      await this.driverRepo.update(trip.driverId, { status: DriverStatus.ACTIVE });
+    }
+
+    await this.tripRepo.softDelete({ id, companyId });
+    return { message: 'Trip deleted successfully' };
+  }
+
   // ── UPLOAD PROOF ─────────────────────────────────────────────────
   async uploadDeliveryProof(id: string, file: Express.Multer.File, companyId: string) {
     if (!file || !file.buffer) {

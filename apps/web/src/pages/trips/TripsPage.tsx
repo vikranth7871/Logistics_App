@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTrips, useCreateTrip, useVehicles, useDrivers, useCustomers } from '@hooks/useERP';
+import { useTrips, useCreateTrip, useVehicles, useDrivers, useCustomers, useDeleteTrip } from '@hooks/useERP';
 import {
   PlusIcon,
   SearchIcon,
@@ -15,6 +15,7 @@ import {
   CheckIcon,
   AlertCircleIcon,
   EyeIcon,
+  TrashIcon,
 } from '@components/common/Icons';
 import React from 'react';
 
@@ -42,6 +43,8 @@ export default function TripsPage() {
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
 
+  const deleteMutation = useDeleteTrip();
+
   const { data, isLoading } = useTrips({
     page,
     limit: 20,
@@ -51,6 +54,12 @@ export default function TripsPage() {
 
   const trips = data?.items || [];
   const meta = data?.meta || { total: 0, totalPages: 1 };
+
+  const handleDelete = (t: any) => {
+    if (window.confirm(`Are you sure you want to delete trip ${t.tripNumber}?`)) {
+      deleteMutation.mutate(t.id);
+    }
+  };
 
   return (
     <div>
@@ -161,9 +170,34 @@ export default function TripsPage() {
                       </span>
                     </td>
                     <td>
-                      <Link to={`/trips/${t.id}`} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px' }}>
-                        <EyeIcon size={14} /> View
-                      </Link>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <Link
+                          to={`/trips/${t.id}`}
+                          className="btn btn-secondary btn-sm"
+                          title="View Trip Details"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px' }}
+                        >
+                          <EyeIcon size={14} /> View
+                        </Link>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          title="Delete Trip"
+                          disabled={deleteMutation.isPending}
+                          onClick={() => handleDelete(t)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '6px 10px',
+                            background: 'rgba(239, 68, 68, 0.12)',
+                            color: 'var(--color-danger)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                          }}
+                        >
+                          <TrashIcon size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

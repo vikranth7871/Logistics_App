@@ -143,6 +143,9 @@ export const tripApi = {
       .post(`/trips/${id}/cancel`, { reason })
       .then((r) => r.data.data),
 
+  deleteTrip: (id: string) =>
+    apiClient.delete(`/trips/${id}`).then((r) => r.data.data),
+
   uploadDeliveryProof: (id: string, file: File, onProgress?: (p: number) => void) => {
     const formData = new FormData();
     formData.append('file', file);

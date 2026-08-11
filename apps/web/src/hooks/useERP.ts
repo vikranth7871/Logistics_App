@@ -313,6 +313,19 @@ export function useCompleteTrip() {
   });
 }
 
+export function useDeleteTrip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tripApi.deleteTrip(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QK.trips.all });
+      qc.invalidateQueries({ queryKey: QK.fleet.summary });
+      toast.success('Trip deleted');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
 export function useUploadDeliveryProof() {
   const qc = useQueryClient();
   return useMutation({

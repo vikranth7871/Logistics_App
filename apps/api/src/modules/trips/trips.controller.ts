@@ -120,6 +120,14 @@ export class TripsController {
     return this.tripsService.cancel(id, dto, user.companyId);
   }
 
+  @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a trip' })
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayload) {
+    return this.tripsService.remove(id, user.companyId);
+  }
+
   @Post(':id/delivery-proof')
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.DRIVER)
   @UseInterceptors(FileInterceptor('file'))
