@@ -18,6 +18,7 @@ export interface JwtPayload {
   email: string;
   role: string;
   companyId: string;
+  driverId?: string;
 }
 
 @Injectable()
@@ -76,6 +77,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         companyId: user.companyId,
+        driverId: user.driverId || null,
       },
     };
   }
@@ -158,6 +160,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       companyId: user.companyId,
+      driverId: user.driverId || undefined,
     };
 
     const [access_token, refresh_token] = await Promise.all([

@@ -11,8 +11,8 @@ export class FuelService {
     @InjectRepository(FuelEntry) private fuelRepo: Repository<FuelEntry>,
   ) {}
 
-  async findAll(query: PaginationDto & { vehicleId?: string; tripId?: string }, companyId: string) {
-    const { page = 1, limit = 20, vehicleId, tripId } = query;
+  async findAll(query: PaginationDto & { vehicleId?: string; tripId?: string; driverId?: string }, companyId: string) {
+    const { page = 1, limit = 20, vehicleId, tripId, driverId } = query;
 
     const qb = this.fuelRepo
       .createQueryBuilder('f')
@@ -23,6 +23,7 @@ export class FuelService {
 
     if (vehicleId) qb.andWhere('f.vehicleId = :vehicleId', { vehicleId });
     if (tripId) qb.andWhere('f.tripId = :tripId', { tripId });
+    if (driverId) qb.andWhere('f.recordedBy IN (SELECT id FROM users WHERE driver_id = :driverId)', { driverId });
 
     qb.orderBy('f.date', 'DESC')
       .skip((page - 1) * limit)

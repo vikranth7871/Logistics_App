@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useTrip, useStartTrip, useCompleteTrip } from '@hooks/useERP';
+import { useTrip, useStartTrip, useDeliverTrip, useCompleteTrip, useUploadDeliveryProof } from '@hooks/useERP';
 import { useState } from 'react';
 import {
   TruckIcon,
@@ -29,9 +29,12 @@ export default function TripDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: trip, isLoading, isError } = useTrip(id!);
   const startMutation = useStartTrip();
+  const deliverMutation = useDeliverTrip();
   const completeMutation = useCompleteTrip();
+  const uploadProofMutation = useUploadDeliveryProof();
 
   const [odometer, setOdometer] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   if (isLoading) return <div className="spinner-page"><div className="spinner" /></div>;
 
@@ -50,6 +53,17 @@ export default function TripDetailPage() {
   }
 
   const currentStep = STATUS_STEPS.indexOf(trip.status);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      await uploadProofMutation.mutateAsync({ id: id!, file });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <div>
@@ -88,12 +102,23 @@ export default function TripDetailPage() {
           {trip.status === 'in_progress' && (
             <button
               className="btn btn-primary"
+              id="deliver-trip-btn"
+              disabled={deliverMutation.isPending}
+              onClick={() => deliverMutation.mutate(id!)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--color-warning)', borderColor: 'var(--color-warning)' }}
+            >
+              <CheckCircleIcon size={16} /> Mark Delivered
+            </button>
+          )}
+          {trip.status === 'delivered' && (
+            <button
+              className="btn btn-primary"
               id="complete-trip-btn"
               disabled={completeMutation.isPending}
               onClick={() => completeMutation.mutate({ id: id!, endOdometer: odometer ? parseFloat(odometer) : undefined })}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--color-success)', borderColor: 'var(--color-success)' }}
             >
-              <CheckCircleIcon size={16} /> Mark Delivered
+              <CheckIcon size={16} /> Complete Trip
             </button>
           )}
         </div>
@@ -175,37 +200,54 @@ export default function TripDetailPage() {
           </div>
 
           {/* Odometer input for transitions */}
-          {(trip.status === 'assigned' || trip.status === 'in_progress') && (
+          {['assigned', 'in_progress', 'delivered'].includes(trip.status) && (
             <div className="card">
               <div className="card-title" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <GaugeIcon size={18} color="var(--color-warning)" /> Odometer Reading
+                <GaugeIcon size={18} color="var(--color-warning)" />
+                {trip.status === 'assigned' ? 'Start Odometer Reading' : 'End Odometer Reading'}
               </div>
               <input
                 type="number"
                 className="form-input"
                 value={odometer}
                 onChange={(e) => setOdometer(e.target.value)}
-                placeholder="Current odometer (km)"
+                placeholder={trip.status === 'assigned' ? 'Start odometer (km)' : 'End odometer (km)'}
               />
               <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
-                Optional — used to calculate distance and fuel efficiency
+                Optional — used to calculate total trip distance & fleet metrics
               </p>
             </div>
           )}
 
           {/* Delivery proof */}
-          {trip.status === 'delivered' && (
+          {['delivered', 'completed'].includes(trip.status) && (
             <div className="card">
               <div className="card-title" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CameraIcon size={18} color="var(--color-success)" /> Delivery Proof
               </div>
-              {trip.deliveryProofUrl ? (
-                <a href={trip.deliveryProofUrl} target="_blank" rel="noreferrer" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  <EyeIcon size={14} /> View Proof
-                </a>
-              ) : (
-                <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>No delivery proof uploaded</div>
-              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {trip.deliveryProofUrl ? (
+                  <div>
+                    <a
+                      href={trip.deliveryProofUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-secondary btn-sm"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <EyeIcon size={14} /> View Uploaded Proof
+                    </a>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>No delivery proof uploaded</div>
+                )}
+
+                {/* Upload proof button */}
+                <label className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', width: 'fit-content' }}>
+                  <CameraIcon size={14} /> {uploading ? 'Uploading...' : trip.deliveryProofUrl ? 'Replace Proof' : 'Upload Proof (POD)'}
+                  <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
+                </label>
+              </div>
             </div>
           )}
         </div>

@@ -12,6 +12,7 @@ import {
   LogOutIcon,
   BellIcon,
 } from '@components/common/Icons';
+import { NotificationBellButton } from '@components/notifications/NotificationPanel';
 
 const DRIVER_NAV = [
   { label: 'My Dashboard', icon: <DashboardIcon size={18} />, to: '/driver/dashboard' },
@@ -103,10 +104,7 @@ export default function DriverLayout() {
             {pageInfo.sub && <div className="topbar-breadcrumb">{pageInfo.sub}</div>}
           </div>
           <div className="topbar-actions">
-            <button className="notif-btn" id="notifications-btn" aria-label="Notifications">
-              <BellIcon size={18} />
-              <span className="notif-dot" />
-            </button>
+            <NotificationBellButton />
           </div>
         </header>
 

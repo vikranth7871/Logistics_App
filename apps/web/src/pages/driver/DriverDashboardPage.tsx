@@ -14,9 +14,8 @@ const TRIP_STATUS_COLORS: Record<string, string> = {
 export default function DriverDashboardPage() {
   const { user } = useAuthStore();
 
-  // Fetch this driver's trips using their driverId (stored in user object or linked)
   const { data: tripData, isLoading: tripsLoading } = useTrips({
-    driverId: (user as any)?.driverId || undefined,
+    driverId: user?.driverId || undefined,
     limit: 5,
   });
 

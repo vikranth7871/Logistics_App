@@ -270,6 +270,20 @@ export function useStartTrip() {
   });
 }
 
+export function useDeliverTrip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tripApi.deliverTrip(id),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: QK.trips.detail(id) });
+      qc.invalidateQueries({ queryKey: QK.trips.all });
+      qc.invalidateQueries({ queryKey: QK.fleet.summary });
+      toast.success('Trip marked as delivered');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
 export function useCompleteTrip() {
   const qc = useQueryClient();
   return useMutation({
@@ -280,6 +294,19 @@ export function useCompleteTrip() {
       qc.invalidateQueries({ queryKey: QK.trips.all });
       qc.invalidateQueries({ queryKey: QK.fleet.summary });
       toast.success('Trip completed');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useUploadDeliveryProof() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) =>
+      tripApi.uploadDeliveryProof(id, file),
+    onSuccess: (_, { id }) => {
+      qc.invalidateQueries({ queryKey: QK.trips.detail(id) });
+      toast.success('Delivery proof uploaded');
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });

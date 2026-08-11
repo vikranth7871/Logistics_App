@@ -100,6 +100,7 @@ function App() {
           <Route index element={<Navigate to="/driver/dashboard" replace />} />
           <Route path="dashboard" element={<DriverDashboardPage />} />
           <Route path="trips" element={<MyTripsPage />} />
+          <Route path="trips/:id" element={<TripDetailPage />} />
           <Route path="expenses" element={<MyExpensesPage />} />
           <Route path="fuel" element={<MyFuelPage />} />
           <Route path="profile" element={<MyProfilePage />} />

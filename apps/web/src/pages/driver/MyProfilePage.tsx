@@ -5,7 +5,7 @@ import { UsersIcon, TruckIcon, CheckCircleIcon, AlertCircleIcon } from '@compone
 
 export default function MyProfilePage() {
   const { user } = useAuthStore();
-  const driverId = (user as any)?.driverId;
+  const driverId = user?.driverId;
 
   const { data: driver, isLoading } = useDriver(driverId || '');
 

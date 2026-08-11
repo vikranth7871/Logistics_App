@@ -26,7 +26,11 @@ export class TripsController {
     @Query() query: PaginationDto & { status?: string; search?: string; vehicleId?: string; driverId?: string; customerId?: string },
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.tripsService.findAll(query, user.companyId);
+    // Drivers are auto-scoped to only trips assigned to them
+    const scopedQuery = user.role === 'driver' && user.driverId
+      ? { ...query, driverId: user.driverId }
+      : query;
+    return this.tripsService.findAll(scopedQuery, user.companyId);
   }
 
   @Get('active')

@@ -11,6 +11,8 @@ import { Vehicle, VehicleStatus } from '../fleet/entities/vehicle.entity';
 import { Driver, DriverStatus } from '../drivers/entities/driver.entity';
 import { StorageService } from '../storage/storage.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType, NotificationSeverity } from '../notifications/entities/notification.entity';
 import { CreateTripDto, AssignTripDto, StartTripDto, CompleteTripDto, CancelTripDto } from './dto/trip.dto';
 import { createPaginatedResponse, PaginationDto } from '../../common/dto/pagination.dto';
 
@@ -23,6 +25,7 @@ export class TripsService {
     private tripStateService: TripStateService,
     private storageService: StorageService,
     private notificationsGateway: NotificationsGateway,
+    private notificationsService: NotificationsService,
   ) {}
 
   // ── LIST ─────────────────────────────────────────────────────────
@@ -141,7 +144,26 @@ export class TripsService {
     trip.driverId = dto.driverId;
     trip.status = TripStatus.ASSIGNED;
 
-    return this.tripRepo.save(trip);
+    const saved = await this.tripRepo.save(trip);
+
+    // Notify the assigned driver
+    if (dto.driverId) {
+      const driver = await this.driverRepo.findOne({ where: { id: dto.driverId } });
+      if (driver?.userId) {
+        await this.notificationsService.create({
+          userId: driver.userId,
+          companyId,
+          type: NotificationType.TRIP_ASSIGNED,
+          title: 'New Trip Assigned',
+          message: `Trip ${saved.tripNumber} (${saved.origin} → ${saved.destination}) has been assigned to you.`,
+          severity: NotificationSeverity.INFO,
+          entityType: 'trip',
+          entityId: saved.id,
+        });
+      }
+    }
+
+    return saved;
   }
 
   // ── START ────────────────────────────────────────────────────────
@@ -162,6 +184,19 @@ export class TripsService {
 
     const saved = await this.tripRepo.save(trip);
     this.notificationsGateway.emitTripUpdate(saved.id, saved.status, saved.vehicle?.registrationNumber || '');
+
+    // Notify admin/manager/dispatcher that trip has started
+    const managerIds = await this.notificationsService.getUserIdsByRole(companyId, ['admin', 'manager', 'dispatcher']);
+    await this.notificationsService.createForMany(managerIds, {
+      companyId,
+      type: NotificationType.TRIP_STARTED,
+      title: 'Trip Started',
+      message: `Trip ${saved.tripNumber} (${saved.origin} → ${saved.destination}) has started.`,
+      severity: NotificationSeverity.INFO,
+      entityType: 'trip',
+      entityId: saved.id,
+    });
+
     return saved;
   }
 
@@ -175,6 +210,19 @@ export class TripsService {
 
     const saved = await this.tripRepo.save(trip);
     this.notificationsGateway.emitTripUpdate(saved.id, saved.status, saved.vehicle?.registrationNumber || '');
+
+    // Notify admin/manager that delivery is confirmed
+    const managerIds = await this.notificationsService.getUserIdsByRole(companyId, ['admin', 'manager']);
+    await this.notificationsService.createForMany(managerIds, {
+      companyId,
+      type: NotificationType.TRIP_DELIVERED,
+      title: 'Delivery Confirmed',
+      message: `Trip ${saved.tripNumber} — delivery confirmed at ${saved.destination}.`,
+      severity: NotificationSeverity.SUCCESS,
+      entityType: 'trip',
+      entityId: saved.id,
+    });
+
     return saved;
   }
 
@@ -201,6 +249,24 @@ export class TripsService {
 
     const saved = await this.tripRepo.save(trip);
     this.notificationsGateway.emitTripUpdate(saved.id, saved.status, saved.vehicle?.registrationNumber || '');
+
+    // Notify admin/manager + the driver
+    const managerIds = await this.notificationsService.getUserIdsByRole(companyId, ['admin', 'manager']);
+    const notifyIds = [...managerIds];
+    if (saved.driverId) {
+      const driver = await this.driverRepo.findOne({ where: { id: saved.driverId } });
+      if (driver?.userId) notifyIds.push(driver.userId);
+    }
+    await this.notificationsService.createForMany([...new Set(notifyIds)], {
+      companyId,
+      type: NotificationType.TRIP_COMPLETED,
+      title: 'Trip Completed',
+      message: `Trip ${saved.tripNumber} (${saved.origin} → ${saved.destination}) has been completed.`,
+      severity: NotificationSeverity.SUCCESS,
+      entityType: 'trip',
+      entityId: saved.id,
+    });
+
     return saved;
   }
 

@@ -26,7 +26,11 @@ export class ExpensesController {
     @Query() query: PaginationDto & { category?: string; vehicleId?: string; tripId?: string; driverId?: string },
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.expensesService.findAll(query, user.companyId);
+    // Drivers are auto-scoped to only their own expense records
+    const scopedQuery = user.role === 'driver' && user.driverId
+      ? { ...query, driverId: user.driverId }
+      : query;
+    return this.expensesService.findAll(scopedQuery, user.companyId);
   }
 
   @Get('summary')

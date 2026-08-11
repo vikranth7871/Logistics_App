@@ -135,7 +135,7 @@ function ExpenseFormModal({ onClose }: { onClose: () => void }) {
   const { user } = useAuthStore();
   const createMutation = useCreateExpense();
   const { data: tripData } = useTrips({
-    driverId: (user as any)?.driverId || undefined,
+    driverId: user?.driverId || undefined,
     status: 'in_progress',
     limit: 20,
   });

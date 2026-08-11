@@ -9,6 +9,7 @@ interface AuthUser {
   email: string;
   role: string;
   companyId: string;
+  driverId?: string | null;
 }
 
 interface AuthState {

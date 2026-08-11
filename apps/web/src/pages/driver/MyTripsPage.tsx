@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@store/auth.store';
-import { useTrips } from '@hooks/useERP';
-import { MapPinIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PlayIcon } from '@components/common/Icons';
+import { useTrips, useCompleteTrip, useUploadDeliveryProof } from '@hooks/useERP';
+import {
+  MapPinIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckCircleIcon,
+  PlayIcon,
+  CheckIcon,
+  EyeIcon,
+  GaugeIcon,
+  CameraIcon,
+  XIcon,
+} from '@components/common/Icons';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'badge-inactive',
   assigned: 'badge-assigned',
   in_progress: 'badge-in_trip',
-  delivered: 'badge-active',
-  completed: 'badge-active',
+  delivered: 'badge-delivered',
+  completed: 'badge-completed',
   cancelled: 'badge-maintenance',
 };
 
 const DRIVER_ACTIONS: Record<string, { label: string; nextStatus: string; color: string }> = {
   assigned: { label: 'Start Trip', nextStatus: 'in_progress', color: 'var(--color-primary)' },
-  in_progress: { label: 'Mark Delivered', nextStatus: 'delivered', color: 'var(--color-success)' },
+  in_progress: { label: 'Mark Delivered', nextStatus: 'delivered', color: 'var(--color-warning)' },
+  delivered: { label: 'Complete Trip', nextStatus: 'completed', color: 'var(--color-success)' },
 };
 
 export default function MyTripsPage() {
@@ -22,9 +35,10 @@ export default function MyTripsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [completeModalTrip, setCompleteModalTrip] = useState<any | null>(null);
 
   const { data, isLoading, refetch } = useTrips({
-    driverId: (user as any)?.driverId || undefined,
+    driverId: user?.driverId || undefined,
     status: statusFilter || undefined,
     page,
     limit: 15,
@@ -34,8 +48,11 @@ export default function MyTripsPage() {
   const meta = data?.meta || { total: 0, totalPages: 1 };
 
   const handleAction = async (trip: any) => {
-    const action = DRIVER_ACTIONS[trip.status];
-    if (!action) return;
+    if (trip.status === 'delivered') {
+      setCompleteModalTrip(trip);
+      return;
+    }
+
     setUpdatingId(trip.id);
     try {
       const { tripApi } = await import('@api/index');
@@ -107,8 +124,13 @@ export default function MyTripsPage() {
                   const action = DRIVER_ACTIONS[t.status];
                   return (
                     <tr key={t.id}>
-                      <td style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--color-primary)' }}>
-                        {t.tripNumber}
+                      <td>
+                        <Link
+                          to={`/driver/trips/${t.id}`}
+                          style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--color-primary)' }}
+                        >
+                          {t.tripNumber}
+                        </Link>
                       </td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{t.origin}</div>
@@ -135,26 +157,34 @@ export default function MyTripsPage() {
                         </span>
                       </td>
                       <td>
-                        {action ? (
-                          <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => handleAction(t)}
-                            disabled={updatingId === t.id}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              background: action.color,
-                              borderColor: action.color,
-                              fontSize: '12px',
-                            }}
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          {action && (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleAction(t)}
+                              disabled={updatingId === t.id}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: action.color,
+                                borderColor: action.color,
+                                fontSize: '12px',
+                              }}
+                            >
+                              {t.status === 'assigned' ? <PlayIcon size={12} /> : t.status === 'in_progress' ? <CheckCircleIcon size={12} /> : <CheckIcon size={12} />}
+                              {updatingId === t.id ? 'Updating…' : action.label}
+                            </button>
+                          )}
+                          <Link
+                            to={`/driver/trips/${t.id}`}
+                            className="btn btn-secondary btn-sm"
+                            title="View Details"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 8px' }}
                           >
-                            {t.status === 'assigned' ? <PlayIcon size={12} /> : <CheckCircleIcon size={12} />}
-                            {updatingId === t.id ? 'Updating…' : action.label}
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: '12px', color: 'var(--color-text-dim)' }}>—</span>
-                        )}
+                            <EyeIcon size={14} /> View
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -182,6 +212,104 @@ export default function MyTripsPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {completeModalTrip && (
+        <CompleteTripModal
+          trip={completeModalTrip}
+          onClose={() => setCompleteModalTrip(null)}
+          onSuccess={() => { setCompleteModalTrip(null); refetch(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CompleteTripModal({ trip, onClose, onSuccess }: { trip: any; onClose: () => void; onSuccess: () => void }) {
+  const completeMutation = useCompleteTrip();
+  const uploadProofMutation = useUploadDeliveryProof();
+
+  const [endOdometer, setEndOdometer] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      if (selectedFile) {
+        await uploadProofMutation.mutateAsync({ id: trip.id, file: selectedFile });
+      }
+      await completeMutation.mutateAsync({
+        id: trip.id,
+        endOdometer: endOdometer ? parseFloat(endOdometer) : undefined,
+      });
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth: '480px' }}>
+        <div className="modal-header">
+          <div>
+            <span className="modal-title">Complete Trip</span>
+            <div style={{ fontSize: '12px', color: 'var(--color-text-dim)', marginTop: '2px', fontFamily: 'monospace' }}>
+              {trip.tripNumber} ({trip.origin} → {trip.destination})
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose}><XIcon size={18} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <GaugeIcon size={16} color="var(--color-warning)" /> End Odometer Reading (km)
+              </label>
+              <input
+                type="number"
+                className="form-input"
+                value={endOdometer}
+                onChange={(e) => setEndOdometer(e.target.value)}
+                placeholder="Enter final odometer (e.g. 45200)"
+              />
+              <span style={{ fontSize: '11px', color: 'var(--color-text-dim)', marginTop: '4px' }}>
+                Optional — used to compute total trip distance driven
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CameraIcon size={16} color="var(--color-success)" /> Upload Proof of Delivery (POD)
+              </label>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                className="form-input"
+                style={{ padding: '6px' }}
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              />
+              <span style={{ fontSize: '11px', color: 'var(--color-text-dim)', marginTop: '4px' }}>
+                Attach signed Lorry Receipt / Proof of Delivery image or PDF
+              </span>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={submitting}
+              style={{ background: 'var(--color-success)', borderColor: 'var(--color-success)' }}
+            >
+              {submitting ? 'Completing…' : '✓ Finish & Complete Trip'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

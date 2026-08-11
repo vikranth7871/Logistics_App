@@ -17,6 +17,7 @@ import {
   BellIcon,
   LogOutIcon,
 } from '@components/common/Icons';
+import { NotificationBellButton } from '@components/notifications/NotificationPanel';
 import React from 'react';
 
 interface NavItem {
@@ -30,21 +31,21 @@ const NAV_ITEMS: { section: string; items: NavItem[] }[] = [
   {
     section: 'Operations',
     items: [
-      { label: 'Dashboard', icon: <DashboardIcon size={18} />, to: '/dashboard' },
-      { label: 'Fleet', icon: <TruckIcon size={18} />, to: '/fleet' },
-      { label: 'Drivers', icon: <UsersIcon size={18} />, to: '/drivers' },
-      { label: 'Trips', icon: <MapPinIcon size={18} />, to: '/trips' },
-      { label: 'Fuel', icon: <FuelIcon size={18} />, to: '/fuel' },
-      { label: 'Expenses', icon: <DollarIcon size={18} />, to: '/expenses' },
-      { label: 'Maintenance', icon: <WrenchIcon size={18} />, to: '/maintenance' },
+      { label: 'Dashboard', icon: <DashboardIcon size={18} />, to: '/dashboard', roles: ['admin', 'manager', 'dispatcher', 'accountant'] },
+      { label: 'Fleet', icon: <TruckIcon size={18} />, to: '/fleet', roles: ['admin', 'manager', 'dispatcher'] },
+      { label: 'Drivers', icon: <UsersIcon size={18} />, to: '/drivers', roles: ['admin', 'manager', 'dispatcher'] },
+      { label: 'Trips', icon: <MapPinIcon size={18} />, to: '/trips', roles: ['admin', 'manager', 'dispatcher'] },
+      { label: 'Fuel', icon: <FuelIcon size={18} />, to: '/fuel', roles: ['admin', 'manager', 'accountant'] },
+      { label: 'Expenses', icon: <DollarIcon size={18} />, to: '/expenses', roles: ['admin', 'manager', 'accountant'] },
+      { label: 'Maintenance', icon: <WrenchIcon size={18} />, to: '/maintenance', roles: ['admin', 'manager'] },
     ],
   },
   {
     section: 'Business',
     items: [
-      { label: 'Customers', icon: <BuildingIcon size={18} />, to: '/customers' },
-      { label: 'Billing', icon: <ReceiptIcon size={18} />, to: '/billing' },
-      { label: 'Reports', icon: <TrendingUpIcon size={18} />, to: '/reports' },
+      { label: 'Customers', icon: <BuildingIcon size={18} />, to: '/customers', roles: ['admin', 'manager', 'accountant'] },
+      { label: 'Billing', icon: <ReceiptIcon size={18} />, to: '/billing', roles: ['admin', 'manager', 'accountant'] },
+      { label: 'Reports', icon: <TrendingUpIcon size={18} />, to: '/reports', roles: ['admin', 'manager', 'accountant'] },
     ],
   },
   {
@@ -148,10 +149,7 @@ export default function AppLayout() {
           </div>
 
           <div className="topbar-actions">
-            <button className="notif-btn" id="notifications-btn" aria-label="Notifications">
-              <BellIcon size={18} />
-              <span className="notif-dot" />
-            </button>
+            <NotificationBellButton />
           </div>
         </header>
 

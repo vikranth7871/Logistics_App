@@ -22,10 +22,14 @@ export class FuelController {
   @Get()
   @ApiOperation({ summary: 'List fuel entries' })
   findAll(
-    @Query() query: PaginationDto & { vehicleId?: string; tripId?: string },
+    @Query() query: PaginationDto & { vehicleId?: string; tripId?: string; driverId?: string },
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.fuelService.findAll(query, user.companyId);
+    // Drivers are auto-scoped to only their own fuel entries
+    const scopedQuery = user.role === 'driver' && user.driverId
+      ? { ...query, driverId: user.driverId }
+      : query;
+    return this.fuelService.findAll(scopedQuery, user.companyId);
   }
 
   @Get('analytics')
