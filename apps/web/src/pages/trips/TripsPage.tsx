@@ -243,6 +243,9 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
     notes: '',
   });
 
+  const now = new Date();
+  const minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
   const availableVehicles = vehicles.filter((v: any) => v.status === 'active');
   const busyVehicles = vehicles.filter((v: any) => v.status !== 'active');
 
@@ -287,15 +290,34 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
-            {/* Scheduled Timings — Placed ABOVE vehicle & driver assignment */}
+            {/* Scheduled Timings — Min set to current date/time to prevent past date selection */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Scheduled Start *</label>
-                <input type="datetime-local" className="form-input" required value={form.scheduledStart} onChange={(e) => set('scheduledStart', e.target.value)} />
+                <input
+                  type="datetime-local"
+                  className="form-input"
+                  required
+                  min={minDateTime}
+                  value={form.scheduledStart}
+                  onChange={(e) => {
+                    set('scheduledStart', e.target.value);
+                    if (form.scheduledEnd && e.target.value > form.scheduledEnd) {
+                      set('scheduledEnd', e.target.value);
+                    }
+                  }}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Scheduled End *</label>
-                <input type="datetime-local" className="form-input" required value={form.scheduledEnd} onChange={(e) => set('scheduledEnd', e.target.value)} />
+                <input
+                  type="datetime-local"
+                  className="form-input"
+                  required
+                  min={form.scheduledStart || minDateTime}
+                  value={form.scheduledEnd}
+                  onChange={(e) => set('scheduledEnd', e.target.value)}
+                />
               </div>
             </div>
 
