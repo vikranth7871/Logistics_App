@@ -12,6 +12,7 @@ import {
   XIcon,
   ChevronLeftIcon,
   CheckIcon,
+  DownloadIcon,
 } from '@components/common/Icons';
 
 const STATUS_STEPS = ['draft', 'assigned', 'in_progress', 'delivered', 'completed'];
@@ -36,6 +37,7 @@ export default function TripDetailPage() {
 
   const [odometer, setOdometer] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showProofModal, setShowProofModal] = useState(false);
 
   useEffect(() => {
     if (trip) {
@@ -257,28 +259,63 @@ export default function TripDetailPage() {
               <div className="card-title" style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CameraIcon size={18} color="var(--color-success)" /> Delivery Proof
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {trip.deliveryProofUrl ? (
-                  <div>
-                    <a
-                      href={trip.deliveryProofUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn btn-secondary btn-sm"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {/* Thumbnail preview */}
+                    <div
+                      onClick={() => setShowProofModal(true)}
+                      style={{
+                        cursor: 'pointer',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: '1px solid var(--color-border)',
+                        maxHeight: '160px',
+                        background: 'rgba(0,0,0,0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      title="Click to view full size"
                     >
-                      <EyeIcon size={14} /> View Uploaded Proof
-                    </a>
+                      {trip.deliveryProofUrl.startsWith('data:application/pdf') || trip.deliveryProofUrl.toLowerCase().includes('.pdf') ? (
+                        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-primary)' }}>
+                          <FileTextIcon size={36} />
+                          <div style={{ fontSize: '12px', marginTop: '6px', fontWeight: 600 }}>PDF Document Attached</div>
+                        </div>
+                      ) : (
+                        <img
+                          src={trip.deliveryProofUrl}
+                          alt="POD Preview"
+                          style={{ width: '100%', maxHeight: '160px', objectFit: 'cover' }}
+                        />
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setShowProofModal(true)}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <EyeIcon size={14} /> View Full Proof
+                      </button>
+                      <label className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <CameraIcon size={14} /> {uploading ? 'Uploading...' : 'Replace Proof'}
+                        <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
+                      </label>
+                    </div>
                   </div>
                 ) : (
-                  <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>No delivery proof uploaded</div>
+                  <div>
+                    <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>No delivery proof uploaded</div>
+                    <label className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', width: 'fit-content' }}>
+                      <CameraIcon size={14} /> {uploading ? 'Uploading...' : 'Upload Proof (POD)'}
+                      <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
+                    </label>
+                  </div>
                 )}
-
-                {/* Upload proof button */}
-                <label className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', width: 'fit-content' }}>
-                  <CameraIcon size={14} /> {uploading ? 'Uploading...' : trip.deliveryProofUrl ? 'Replace Proof' : 'Upload Proof (POD)'}
-                  <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleFileUpload} disabled={uploading} />
-                </label>
               </div>
             </div>
           )}
@@ -294,6 +331,59 @@ export default function TripDetailPage() {
           <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>{trip.notes}</p>
         </div>
       )}
+
+      {/* Proof Lightbox Modal */}
+      {showProofModal && trip.deliveryProofUrl && (
+        <ProofModal url={trip.deliveryProofUrl} onClose={() => setShowProofModal(false)} />
+      )}
+    </div>
+  );
+}
+
+function ProofModal({ url, onClose }: { url: string; onClose: () => void }) {
+  const isPdf = url.startsWith('data:application/pdf') || url.toLowerCase().includes('.pdf');
+
+  return (
+    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth: '750px', width: '90%' }}>
+        <div className="modal-header">
+          <span className="modal-title">Delivery Proof (POD)</span>
+          <button className="modal-close" onClick={onClose}><XIcon size={18} /></button>
+        </div>
+        <div
+          className="modal-body"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '16px',
+            background: '#0a0a0c',
+            borderRadius: '8px',
+            minHeight: '300px',
+          }}
+        >
+          {isPdf ? (
+            <iframe src={url} style={{ width: '100%', height: '520px', border: 'none' }} title="Delivery Proof PDF" />
+          ) : (
+            <img
+              src={url}
+              alt="Delivery Proof POD"
+              style={{ maxWidth: '100%', maxHeight: '520px', borderRadius: '6px', objectFit: 'contain' }}
+            />
+          )}
+        </div>
+        <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+          <a
+            href={url}
+            download="delivery-proof"
+            className="btn btn-secondary btn-sm"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+          >
+            <DownloadIcon size={14} /> Download File
+          </a>
+          <button className="btn btn-secondary" onClick={onClose}>Close</button>
+        </div>
+      </div>
     </div>
   );
 }
