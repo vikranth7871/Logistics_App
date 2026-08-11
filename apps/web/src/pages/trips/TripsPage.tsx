@@ -243,6 +243,12 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
     notes: '',
   });
 
+  const availableVehicles = vehicles.filter((v: any) => v.status === 'active');
+  const busyVehicles = vehicles.filter((v: any) => v.status !== 'active');
+
+  const availableDrivers = drivers.filter((d: any) => d.status === 'active');
+  const busyDrivers = drivers.filter((d: any) => d.status !== 'active');
+
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -281,29 +287,63 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
               </div>
             </div>
 
-            {/* Vehicle & Driver Selection */}
+            {/* Scheduled Timings — Placed ABOVE vehicle & driver assignment */}
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Scheduled Start *</label>
+                <input type="datetime-local" className="form-input" required value={form.scheduledStart} onChange={(e) => set('scheduledStart', e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Scheduled End *</label>
+                <input type="datetime-local" className="form-input" required value={form.scheduledEnd} onChange={(e) => set('scheduledEnd', e.target.value)} />
+              </div>
+            </div>
+
+            {/* Vehicle & Driver Selection — Grouped by Availability */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Assign Vehicle</label>
                 <select className="form-select" value={form.vehicleId} onChange={(e) => set('vehicleId', e.target.value)}>
-                  <option value="">-- Select Vehicle --</option>
-                  {vehicles.map((v: any) => (
-                    <option key={v.id} value={v.id}>
-                      {v.registrationNumber} ({v.make} {v.model})
-                    </option>
-                  ))}
+                  <option value="">-- Select Available Vehicle --</option>
+                  <optgroup label="✓ Available Vehicles (Free)">
+                    {availableVehicles.map((v: any) => (
+                      <option key={v.id} value={v.id}>
+                        ✓ {v.registrationNumber} ({v.make || ''} {v.model || ''}) — Free
+                      </option>
+                    ))}
+                  </optgroup>
+                  {busyVehicles.length > 0 && (
+                    <optgroup label="🚫 Busy / In Trip / Maintenance">
+                      {busyVehicles.map((v: any) => (
+                        <option key={v.id} value={v.id} disabled style={{ color: 'var(--color-text-dim)' }}>
+                          🚫 {v.registrationNumber} ({v.status?.replace('_', ' ')})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Assign Driver</label>
                 <select className="form-select" value={form.driverId} onChange={(e) => set('driverId', e.target.value)}>
-                  <option value="">-- Select Driver --</option>
-                  {drivers.map((d: any) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} ({d.phone || 'No phone'})
-                    </option>
-                  ))}
+                  <option value="">-- Select Available Driver --</option>
+                  <optgroup label="✓ Available Drivers (Free)">
+                    {availableDrivers.map((d: any) => (
+                      <option key={d.id} value={d.id}>
+                        ✓ {d.name} ({d.phone || 'No phone'}) — Available
+                      </option>
+                    ))}
+                  </optgroup>
+                  {busyDrivers.length > 0 && (
+                    <optgroup label="🚫 On Trip / Busy">
+                      {busyDrivers.map((d: any) => (
+                        <option key={d.id} value={d.id} disabled style={{ color: 'var(--color-text-dim)' }}>
+                          🚫 {d.name} ({d.status?.replace('_', ' ')})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
             </div>
@@ -319,18 +359,6 @@ function TripFormModal({ onClose }: { onClose: () => void }) {
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Timings */}
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Scheduled Start</label>
-                <input type="datetime-local" className="form-input" value={form.scheduledStart} onChange={(e) => set('scheduledStart', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Scheduled End</label>
-                <input type="datetime-local" className="form-input" value={form.scheduledEnd} onChange={(e) => set('scheduledEnd', e.target.value)} />
-              </div>
             </div>
 
             {/* Freight & Cargo */}
