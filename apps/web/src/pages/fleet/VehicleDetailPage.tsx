@@ -110,6 +110,21 @@ export default function VehicleDetailPage() {
     setShowUploadModal(true);
   };
 
+  const handleRemoveAttachment = async (doc: any) => {
+    if (!doc || !id) return;
+    const docName = doc.type ? doc.type.replace(/_/g, ' ') : 'document';
+    if (!window.confirm(`Are you sure you want to remove the uploaded ${docName} attachment? The compliance slot will remain available for new uploads.`)) {
+      return;
+    }
+    try {
+      await fleetApi.deleteVehicleDocument(id, doc.id);
+      toast.success('Document attachment removed');
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove document attachment');
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '30px' }}>
       
@@ -403,7 +418,7 @@ export default function VehicleDetailPage() {
                   </div>
 
                   {/* Actions Row */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--color-border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', paddingTop: '8px', borderTop: '1px solid var(--color-border)' }}>
                     <button
                       className="btn btn-secondary btn-sm"
                       onClick={() => setSelectedPreviewDoc(uploadedDoc)}
@@ -412,7 +427,7 @@ export default function VehicleDetailPage() {
                       <EyeIcon size={13} /> View Full Size
                     </button>
 
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <button
                         className="btn btn-secondary btn-sm"
                         onClick={() => handleOpenUploadForSlot(slot.type)}
@@ -423,11 +438,19 @@ export default function VehicleDetailPage() {
                       </button>
                       <button
                         className="btn btn-secondary btn-sm"
-                        onClick={() => setDeleteDocTarget(uploadedDoc)}
-                        title="Delete document"
-                        style={{ padding: '4px 7px', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
+                        onClick={() => handleRemoveAttachment(uploadedDoc)}
+                        title="Remove uploaded file from this slot"
+                        style={{
+                          fontSize: '11px',
+                          color: '#ef4444',
+                          borderColor: 'rgba(239,68,68,0.25)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 8px',
+                        }}
                       >
-                        <TrashIcon size={13} />
+                        <TrashIcon size={12} /> Remove Attachment
                       </button>
                     </div>
                   </div>
@@ -540,10 +563,18 @@ export default function VehicleDetailPage() {
                     </button>
                     <button
                       className="btn btn-secondary btn-sm"
-                      onClick={() => setDeleteDocTarget(doc)}
-                      style={{ padding: '4px 7px', color: '#ef4444' }}
+                      onClick={() => handleRemoveAttachment(doc)}
+                      style={{
+                        fontSize: '11px',
+                        color: '#ef4444',
+                        borderColor: 'rgba(239, 68, 68, 0.25)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 8px',
+                      }}
                     >
-                      <TrashIcon size={13} />
+                      <TrashIcon size={12} /> Remove Attachment
                     </button>
                   </div>
                 </div>

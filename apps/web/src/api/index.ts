@@ -63,6 +63,9 @@ export const fleetApi = {
       .then((r) => r.data.data);
   },
 
+  deleteVehicleDocument: (vehicleId: string, docId: string) =>
+    apiClient.delete(`/fleet/vehicles/${vehicleId}/documents/${docId}`).then((r) => r.data.data),
+
   getExpiringDocuments: (days = 30) =>
     apiClient
       .get('/fleet/documents/expiring', { params: { days } })
