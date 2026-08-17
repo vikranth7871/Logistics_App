@@ -19,6 +19,7 @@ export const DOCUMENT_TYPES = [
 interface UploadDocumentModalProps {
   vehicleId: string;
   vehicleRegistration: string;
+  initialType?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -26,10 +27,11 @@ interface UploadDocumentModalProps {
 export default function UploadDocumentModal({
   vehicleId,
   vehicleRegistration,
+  initialType = 'insurance',
   onClose,
   onSuccess,
 }: UploadDocumentModalProps) {
-  const [type, setType] = useState('insurance');
+  const [type, setType] = useState(initialType);
   const [documentNumber, setDocumentNumber] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');

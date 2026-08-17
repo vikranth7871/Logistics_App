@@ -10,7 +10,8 @@ import {
   PlusIcon, PaperclipIcon, EditIcon, TruckIcon,
   WrenchIcon, FileTextIcon, EyeIcon, XIcon,
   ChevronLeftIcon, TrashIcon, DownloadIcon,
-  CheckCircleIcon, AlertCircleIcon, CalendarIcon
+  CheckCircleIcon, AlertCircleIcon, CalendarIcon,
+  ShieldIcon
 } from '@components/common/Icons';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -20,21 +21,63 @@ const STATUS_COLORS: Record<string, string> = {
   inactive: 'badge-inactive',
 };
 
-const DOC_META: Record<string, { label: string; icon: string }> = {
-  insurance: { label: 'Insurance Policy', icon: '🛡️' },
-  permit: { label: 'Goods Permit', icon: '📜' },
-  fitness: { label: 'Fitness Certificate (FC)', icon: '📋' },
-  rc: { label: 'RC Book (Registration)', icon: '📘' },
-  road_tax: { label: 'Road Tax Token', icon: '🛣️' },
-  pollution: { label: 'PUC Certificate', icon: '🌿' },
-  other: { label: 'Compliance Document', icon: '📄' },
-};
+export const STATUTORY_DOCUMENT_SLOTS = [
+  {
+    type: 'rc',
+    title: 'Registration Certificate (RC Book)',
+    shortName: 'RC Book',
+    icon: '📘',
+    description: 'Vehicle ownership & registration record issued by RTO',
+    mandatory: true,
+  },
+  {
+    type: 'insurance',
+    title: 'Vehicle Insurance Policy',
+    shortName: 'Insurance Policy',
+    icon: '🛡️',
+    description: 'Commercial vehicle comprehensive or third-party policy',
+    mandatory: true,
+  },
+  {
+    type: 'fitness',
+    title: 'Fitness Certificate (FC)',
+    shortName: 'Fitness Certificate',
+    icon: '📋',
+    description: 'Mandatory technical roadworthiness certificate from RTO',
+    mandatory: true,
+  },
+  {
+    type: 'permit',
+    title: 'Goods Carriage Permit',
+    shortName: 'Goods Permit',
+    icon: '📜',
+    description: 'National Permit or State authorization for commercial goods',
+    mandatory: true,
+  },
+  {
+    type: 'pollution',
+    title: 'Pollution Under Control (PUC)',
+    shortName: 'PUC Certificate',
+    icon: '🌿',
+    description: 'Valid emission test compliance certificate',
+    mandatory: true,
+  },
+  {
+    type: 'road_tax',
+    title: 'Road Tax Token',
+    shortName: 'Road Tax',
+    icon: '🛣️',
+    description: 'State / National highway commercial road tax receipt',
+    mandatory: true,
+  },
+];
 
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: vehicle, isLoading, isError, refetch } = useVehicle(id!);
 
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadInitialType, setUploadInitialType] = useState('insurance');
   const [showEditVehicleModal, setShowEditVehicleModal] = useState(false);
   const [selectedPreviewDoc, setSelectedPreviewDoc] = useState<any | null>(null);
   const [deleteDocTarget, setDeleteDocTarget] = useState<any | null>(null);
@@ -58,6 +101,20 @@ export default function VehicleDetailPage() {
   }
 
   const documents = vehicle.documents || [];
+
+  // Match uploaded documents to statutory slots
+  const uploadedTypes = new Set(documents.map((d: any) => d.type));
+  const uploadedStatutoryCount = STATUTORY_DOCUMENT_SLOTS.filter((s) => uploadedTypes.has(s.type)).length;
+  const compliancePercent = Math.round((uploadedStatutoryCount / STATUTORY_DOCUMENT_SLOTS.length) * 100);
+  const missingCount = STATUTORY_DOCUMENT_SLOTS.length - uploadedStatutoryCount;
+
+  // Custom / other documents not in standard 6 slots
+  const additionalDocs = documents.filter((d: any) => !STATUTORY_DOCUMENT_SLOTS.some((s) => s.type === d.type));
+
+  const handleOpenUploadForSlot = (slotType: string) => {
+    setUploadInitialType(slotType);
+    setShowUploadModal(true);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '30px' }}>
@@ -87,7 +144,7 @@ export default function VehicleDetailPage() {
           <button
             className="btn btn-primary"
             id="upload-doc-btn"
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => handleOpenUploadForSlot('insurance')}
             style={{ background: '#f97316', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
             <PaperclipIcon size={16} /> Upload Document
@@ -161,59 +218,115 @@ export default function VehicleDetailPage() {
 
       </div>
 
-      {/* Documents Card */}
-      <div className="card" style={{ padding: '20px', background: 'var(--color-surface)' }}>
-        <div className="card-header" style={{ marginBottom: '16px' }}>
+      {/* ── Statutory Vehicle Compliance Document Center ── */}
+      <div className="card" style={{ padding: '22px', background: 'var(--color-surface)' }}>
+        
+        {/* Compliance Section Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
           <div>
-            <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 800 }}>
-              <FileTextIcon size={18} color="#3b82f6" /> Vehicle Compliance Documents
-            </span>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-              {documents.length} official documents on file
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldIcon size={20} color={compliancePercent === 100 ? '#22c55e' : '#f97316'} />
+              <h2 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
+                Statutory Compliance Documents
+              </h2>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                padding: '2px 8px',
+                borderRadius: '12px',
+                background: compliancePercent === 100 ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)',
+                color: compliancePercent === 100 ? '#22c55e' : '#f97316',
+                border: `1px solid ${compliancePercent === 100 ? 'rgba(34,197,94,0.3)' : 'rgba(249,115,22,0.3)'}`,
+              }}>
+                {uploadedStatutoryCount} / {STATUTORY_DOCUMENT_SLOTS.length} Mandatory Uploaded ({compliancePercent}%)
+              </span>
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '3px' }}>
+              Statutory RTO &amp; Transport Authority documents required for national commercial dispatch
             </div>
           </div>
+
           <button
             className="btn btn-primary btn-sm"
             id="upload-doc-btn-2"
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => handleOpenUploadForSlot('insurance')}
             style={{ background: '#f97316', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
-            <PlusIcon size={14} /> Upload
+            <PlusIcon size={14} /> Upload Document
           </button>
         </div>
 
-        {documents.length === 0 ? (
-          <div className="empty-state" style={{ padding: '36px', background: 'var(--color-surface2)', borderRadius: '8px', border: '1px dashed var(--color-border)' }}>
-            <div className="empty-state-icon" style={{ display: 'flex', justifyContent: 'center' }}>
-              <FileTextIcon size={40} color="var(--color-text-dim)" />
-            </div>
-            <div className="empty-state-text" style={{ fontSize: '15px', fontWeight: 700 }}>No documents uploaded yet</div>
-            <div className="empty-state-sub" style={{ fontSize: '12px' }}>
-              Upload insurance policies, state permits, fitness certificates (FC), and RC Book.
-            </div>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => setShowUploadModal(true)}
-              style={{ marginTop: '14px', background: '#f97316', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <PlusIcon size={14} /> Upload First Document
-            </button>
+        {/* Compliance Progress Bar & Status Alert */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ width: '100%', height: '8px', background: 'var(--color-surface2)', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+            <div style={{
+              width: `${compliancePercent}%`,
+              height: '100%',
+              background: compliancePercent === 100
+                ? '#22c55e'
+                : 'linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)',
+              transition: 'width 0.4s ease',
+            }} />
           </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
-            {documents.map((doc: any) => {
-              const docMeta = DOC_META[doc.type] || { label: doc.type, icon: '📄' };
-              const daysLeft = doc.expiryDate
-                ? Math.ceil((new Date(doc.expiryDate).getTime() - Date.now()) / 86_400_000)
+
+          {missingCount > 0 ? (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              borderRadius: '8px',
+              padding: '10px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+              fontSize: '12px',
+              color: '#ef4444',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertCircleIcon size={16} />
+                <span>
+                  <strong>Action Required:</strong> {missingCount} mandatory statutory document(s) are missing for lorry <strong>{vehicle.registrationNumber}</strong>. Upload below to avoid RTO road penalties.
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              background: 'rgba(34, 197, 94, 0.08)',
+              border: '1px solid rgba(34, 197, 94, 0.25)',
+              borderRadius: '8px',
+              padding: '10px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '12px',
+              color: '#22c55e',
+            }}>
+              <CheckCircleIcon size={16} />
+              <span>
+                <strong>100% Fully Compliant:</strong> All 6 statutory documents are uploaded, active, and verified.
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ── 6 Fixed Statutory Slots Grid ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+          {STATUTORY_DOCUMENT_SLOTS.map((slot) => {
+            const uploadedDoc = documents.find((d: any) => d.type === slot.type);
+
+            if (uploadedDoc) {
+              // ── CASE 1: Document Uploaded ──
+              const daysLeft = uploadedDoc.expiryDate
+                ? Math.ceil((new Date(uploadedDoc.expiryDate).getTime() - Date.now()) / 86_400_000)
                 : null;
 
               const isExpired = daysLeft !== null && daysLeft < 0;
               const isExpiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
-              const isPdf = doc.fileUrl?.includes('application/pdf') || doc.fileUrl?.toLowerCase().endsWith('.pdf');
+              const isPdf = uploadedDoc.fileUrl?.includes('application/pdf') || uploadedDoc.fileUrl?.toLowerCase().endsWith('.pdf');
 
               return (
                 <div
-                  key={doc.id}
+                  key={slot.type}
                   style={{
                     background: 'var(--color-surface2)',
                     border: '1px solid var(--color-border)',
@@ -230,17 +343,17 @@ export default function VehicleDetailPage() {
                     {/* Document Header */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>{docMeta.icon}</span> {docMeta.label}
+                        <span>{slot.icon}</span> {slot.title}
                       </span>
-                      {doc.documentNumber && (
+                      {uploadedDoc.documentNumber && (
                         <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#f97316', fontWeight: 700 }}>
-                          #{doc.documentNumber}
+                          #{uploadedDoc.documentNumber}
                         </span>
                       )}
                     </div>
 
                     {/* Expiry Pill */}
-                    {doc.expiryDate && (
+                    {uploadedDoc.expiryDate && (
                       <div style={{
                         fontSize: '11px',
                         fontWeight: 700,
@@ -258,19 +371,19 @@ export default function VehicleDetailPage() {
                         color: isExpired ? '#ef4444' : isExpiringSoon ? '#f59e0b' : '#22c55e',
                       }}>
                         {isExpired ? (
-                          <>Expired {new Date(doc.expiryDate).toLocaleDateString('en-IN')}</>
+                          <>Expired {new Date(uploadedDoc.expiryDate).toLocaleDateString('en-IN')}</>
                         ) : (
-                          <>Valid till {new Date(doc.expiryDate).toLocaleDateString('en-IN')} ({daysLeft}d left)</>
+                          <>Valid till {new Date(uploadedDoc.expiryDate).toLocaleDateString('en-IN')} ({daysLeft}d left)</>
                         )}
                       </div>
                     )}
 
                     {/* Visible Photo / PDF Thumbnail Container */}
                     <div
-                      onClick={() => setSelectedPreviewDoc(doc)}
+                      onClick={() => setSelectedPreviewDoc(uploadedDoc)}
                       style={{
                         width: '100%',
-                        height: '140px',
+                        height: '130px',
                         background: '#090d16',
                         borderRadius: '6px',
                         overflow: 'hidden',
@@ -286,13 +399,13 @@ export default function VehicleDetailPage() {
                     >
                       {isPdf ? (
                         <div style={{ textAlign: 'center', color: '#3b82f6' }}>
-                          <FileTextIcon size={40} />
+                          <FileTextIcon size={36} />
                           <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>PDF Document (Click to view)</div>
                         </div>
-                      ) : doc.fileUrl ? (
+                      ) : uploadedDoc.fileUrl ? (
                         <img
-                          src={doc.fileUrl}
-                          alt={doc.type}
+                          src={uploadedDoc.fileUrl}
+                          alt={uploadedDoc.type}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -327,38 +440,163 @@ export default function VehicleDetailPage() {
                       </div>
                     </div>
 
-                    {doc.notes && (
+                    {uploadedDoc.notes && (
                       <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
-                        {doc.notes}
+                        {uploadedDoc.notes}
                       </div>
                     )}
                   </div>
 
                   {/* Actions Row */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--color-border)' }}>
                     <button
                       className="btn btn-secondary btn-sm"
-                      onClick={() => setSelectedPreviewDoc(doc)}
+                      onClick={() => setSelectedPreviewDoc(uploadedDoc)}
                       style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                     >
                       <EyeIcon size={13} /> View Full Size
                     </button>
 
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => setDeleteDocTarget(doc)}
-                      title="Delete document"
-                      style={{ padding: '4px 7px', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
-                    >
-                      <TrashIcon size={13} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleOpenUploadForSlot(slot.type)}
+                        title="Replace or renew document"
+                        style={{ fontSize: '11px', padding: '4px 8px' }}
+                      >
+                        Renew
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setDeleteDocTarget(uploadedDoc)}
+                        title="Delete document"
+                        style={{ padding: '4px 7px', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
+                      >
+                        <TrashIcon size={13} />
+                      </button>
+                    </div>
                   </div>
 
                 </div>
               );
-            })}
+            }
+
+            // ── CASE 2: Document NOT Uploaded (Mandatory Missing Slot) ──
+            return (
+              <div
+                key={slot.type}
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '2px dashed rgba(239, 68, 68, 0.35)',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  position: 'relative',
+                  transition: 'border-color 0.2s',
+                }}
+              >
+                <div>
+                  {/* Slot Title & Missing Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-text)' }}>
+                      <span>{slot.icon}</span> {slot.title}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(239,68,68,0.12)', color: '#ef4444', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', marginBottom: '10px' }}>
+                    <AlertCircleIcon size={12} /> Not Uploaded
+                  </div>
+
+                  {/* Description Box */}
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4, background: 'var(--color-surface2)', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)' }}>
+                    {slot.description}
+                  </div>
+                </div>
+
+                {/* Big Action Button to Upload this specific document */}
+                <button
+                  className="btn btn-primary"
+                  onClick={() => handleOpenUploadForSlot(slot.type)}
+                  style={{
+                    background: '#f97316',
+                    width: '100%',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px',
+                  }}
+                >
+                  <PlusIcon size={14} /> + Upload {slot.shortName}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Additional Fleet Documents (if any custom types uploaded) ── */}
+        {additionalDocs.length > 0 && (
+          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '12px', color: 'var(--color-text)' }}>
+              📄 Additional Fleet Documents ({additionalDocs.length})
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+              {additionalDocs.map((doc: any) => (
+                <div
+                  key={doc.id}
+                  style={{
+                    background: 'var(--color-surface2)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '8px',
+                    padding: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: '10px',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>
+                      📄 {doc.type?.toUpperCase()}
+                    </div>
+                    {doc.expiryDate && (
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                        Expiry: {new Date(doc.expiryDate).toLocaleDateString('en-IN')}
+                      </div>
+                    )}
+                    {doc.notes && (
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                        {doc.notes}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--color-border)' }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setSelectedPreviewDoc(doc)}
+                      style={{ fontSize: '11px' }}
+                    >
+                      <EyeIcon size={13} /> View
+                    </button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setDeleteDocTarget(doc)}
+                      style={{ padding: '4px 7px', color: '#ef4444' }}
+                    >
+                      <TrashIcon size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
       </div>
 
       {/* ── Upload Document Modal ── */}
@@ -366,6 +604,7 @@ export default function VehicleDetailPage() {
         <UploadDocumentModal
           vehicleId={id!}
           vehicleRegistration={vehicle.registrationNumber}
+          initialType={uploadInitialType}
           onClose={() => setShowUploadModal(false)}
           onSuccess={() => refetch()}
         />
