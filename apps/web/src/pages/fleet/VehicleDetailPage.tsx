@@ -315,11 +315,6 @@ export default function VehicleDetailPage() {
                       <span style={{ fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <FileTextIcon size={15} color="#f97316" /> {slot.title}
                       </span>
-                      {uploadedDoc.documentNumber && (
-                        <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#f97316', fontWeight: 700 }}>
-                          #{uploadedDoc.documentNumber}
-                        </span>
-                      )}
                     </div>
 
                     {/* Expiry Pill */}

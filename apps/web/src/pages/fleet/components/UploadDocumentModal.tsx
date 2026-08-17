@@ -32,7 +32,6 @@ export default function UploadDocumentModal({
   onSuccess,
 }: UploadDocumentModalProps) {
   const [type, setType] = useState(initialType);
-  const [documentNumber, setDocumentNumber] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [notes, setNotes] = useState('');
@@ -68,7 +67,6 @@ export default function UploadDocumentModal({
         file,
         {
           type,
-          documentNumber: documentNumber.trim() || undefined,
           issueDate: issueDate || undefined,
           expiryDate: expiryDate || undefined,
           notes: notes.trim() || undefined,
@@ -137,19 +135,6 @@ export default function UploadDocumentModal({
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Document / Policy Number */}
-            <div className="form-group">
-              <label className="form-label">Certificate / Policy / Permit Number</label>
-              <input
-                type="text"
-                placeholder="e.g. POL-981245-TN"
-                className="form-input"
-                value={documentNumber}
-                onChange={(e) => setDocumentNumber(e.target.value)}
-                style={{ fontFamily: 'monospace' }}
-              />
             </div>
 
             {/* Issue Date & Expiry Date */}
