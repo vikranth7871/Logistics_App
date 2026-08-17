@@ -250,9 +250,9 @@ export default function VehicleDetailPage() {
           </button>
         </div>
 
-        {/* Compliance Progress Bar & Status Alert */}
+        {/* Compliance Progress Bar */}
         <div style={{ marginBottom: '20px' }}>
-          <div style={{ width: '100%', height: '8px', background: 'var(--color-surface2)', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+          <div style={{ width: '100%', height: '8px', background: 'var(--color-surface2)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{
               width: `${compliancePercent}%`,
               height: '100%',
@@ -262,45 +262,6 @@ export default function VehicleDetailPage() {
               transition: 'width 0.4s ease',
             }} />
           </div>
-
-          {missingCount > 0 ? (
-            <div style={{
-              background: 'rgba(239, 68, 68, 0.08)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
-              borderRadius: '8px',
-              padding: '10px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '10px',
-              fontSize: '12px',
-              color: '#ef4444',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <AlertCircleIcon size={16} />
-                <span>
-                  <strong>Action Required:</strong> {missingCount} mandatory statutory document(s) are missing for lorry <strong>{vehicle.registrationNumber}</strong>. Upload below to avoid RTO road penalties.
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div style={{
-              background: 'rgba(34, 197, 94, 0.08)',
-              border: '1px solid rgba(34, 197, 94, 0.25)',
-              borderRadius: '8px',
-              padding: '10px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '12px',
-              color: '#22c55e',
-            }}>
-              <CheckCircleIcon size={16} />
-              <span>
-                <strong>100% Fully Compliant:</strong> All 6 statutory documents are uploaded, active, and verified.
-              </span>
-            </div>
-          )}
         </div>
 
         {/* ── 6 Fixed Statutory Slots Grid ── */}
