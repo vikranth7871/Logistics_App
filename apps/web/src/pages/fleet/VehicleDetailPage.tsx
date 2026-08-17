@@ -5,6 +5,7 @@ import { useVehicle } from '@hooks/useERP';
 import { fleetApi } from '@api/index';
 import UploadDocumentModal from './components/UploadDocumentModal';
 import VehicleFormModal from './components/VehicleFormModal';
+import DocumentLightboxModal from './components/DocumentLightboxModal';
 import {
   PlusIcon, PaperclipIcon, EditIcon, TruckIcon,
   WrenchIcon, FileTextIcon, EyeIcon, XIcon,
@@ -35,8 +36,8 @@ export default function VehicleDetailPage() {
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showEditVehicleModal, setShowEditVehicleModal] = useState(false);
+  const [selectedPreviewDoc, setSelectedPreviewDoc] = useState<any | null>(null);
   const [deleteDocTarget, setDeleteDocTarget] = useState<any | null>(null);
-  const [isDeletingDoc, setIsDeletingDoc] = useState(false);
 
   if (isLoading) {
     return <div className="spinner-page"><div className="spinner" /></div>;
@@ -55,21 +56,6 @@ export default function VehicleDetailPage() {
       </div>
     );
   }
-
-  const handleDeleteDocument = async () => {
-    if (!deleteDocTarget || !id) return;
-    setIsDeletingDoc(true);
-    try {
-      await fleetApi.deleteVehicle(id); // fallback delete or delete doc
-      toast.success('Document deleted successfully');
-      setDeleteDocTarget(null);
-      refetch();
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to delete document');
-    } finally {
-      setIsDeletingDoc(false);
-    }
-  };
 
   const documents = vehicle.documents || [];
 
@@ -214,7 +200,7 @@ export default function VehicleDetailPage() {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
             {documents.map((doc: any) => {
               const docMeta = DOC_META[doc.type] || { label: doc.type, icon: '📄' };
               const daysLeft = doc.expiryDate
@@ -223,6 +209,7 @@ export default function VehicleDetailPage() {
 
               const isExpired = daysLeft !== null && daysLeft < 0;
               const isExpiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
+              const isPdf = doc.fileUrl?.includes('application/pdf') || doc.fileUrl?.toLowerCase().endsWith('.pdf');
 
               return (
                 <div
@@ -236,29 +223,33 @@ export default function VehicleDetailPage() {
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     gap: '10px',
+                    overflow: 'hidden',
                   }}
                 >
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {/* Document Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span>{docMeta.icon}</span> {docMeta.label}
                       </span>
                       {doc.documentNumber && (
-                        <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#f97316', fontWeight: 700 }}>
+                        <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#f97316', fontWeight: 700 }}>
                           #{doc.documentNumber}
                         </span>
                       )}
                     </div>
 
+                    {/* Expiry Pill */}
                     {doc.expiryDate && (
                       <div style={{
                         fontSize: '11px',
                         fontWeight: 700,
-                        padding: '3px 7px',
+                        padding: '3px 8px',
                         borderRadius: '4px',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
+                        marginBottom: '10px',
                         background: isExpired
                           ? 'rgba(239,68,68,0.15)'
                           : isExpiringSoon
@@ -274,33 +265,90 @@ export default function VehicleDetailPage() {
                       </div>
                     )}
 
+                    {/* Visible Photo / PDF Thumbnail Container */}
+                    <div
+                      onClick={() => setSelectedPreviewDoc(doc)}
+                      style={{
+                        width: '100%',
+                        height: '140px',
+                        background: '#090d16',
+                        borderRadius: '6px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        position: 'relative',
+                        marginBottom: '8px',
+                      }}
+                      title="Click to view full size"
+                    >
+                      {isPdf ? (
+                        <div style={{ textAlign: 'center', color: '#3b82f6' }}>
+                          <FileTextIcon size={40} />
+                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>PDF Document (Click to view)</div>
+                        </div>
+                      ) : doc.fileUrl ? (
+                        <img
+                          src={doc.fileUrl}
+                          alt={doc.type}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            transition: 'transform 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1.0)')}
+                        />
+                      ) : (
+                        <div style={{ textAlign: 'center', color: 'var(--color-text-dim)' }}>
+                          <FileTextIcon size={32} />
+                          <div style={{ fontSize: '11px', marginTop: '4px' }}>No photo file</div>
+                        </div>
+                      )}
+
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '6px',
+                        right: '6px',
+                        background: 'rgba(0,0,0,0.7)',
+                        backdropFilter: 'blur(4px)',
+                        color: '#ffffff',
+                        fontSize: '10px',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                      }}>
+                        <EyeIcon size={11} /> Expand
+                      </div>
+                    </div>
+
                     {doc.notes && (
-                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
                         {doc.notes}
                       </div>
                     )}
                   </div>
 
+                  {/* Actions Row */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    {doc.fileUrl ? (
-                      <a
-                        href={doc.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '11px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                      >
-                        <EyeIcon size={13} /> View File
-                      </a>
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'var(--color-text-dim)' }}>File on Record</span>
-                    )}
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setSelectedPreviewDoc(doc)}
+                      style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      <EyeIcon size={13} /> View Full Size
+                    </button>
 
                     <button
                       className="btn btn-secondary btn-sm"
                       onClick={() => setDeleteDocTarget(doc)}
                       title="Delete document"
-                      style={{ padding: '4px 6px', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
+                      style={{ padding: '4px 7px', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
                     >
                       <TrashIcon size={13} />
                     </button>
@@ -329,6 +377,15 @@ export default function VehicleDetailPage() {
           vehicle={vehicle}
           onClose={() => setShowEditVehicleModal(false)}
           onSuccess={() => refetch()}
+        />
+      )}
+
+      {/* ── Document Lightbox Fullscreen Modal ── */}
+      {selectedPreviewDoc && (
+        <DocumentLightboxModal
+          document={selectedPreviewDoc}
+          vehicleRegistration={vehicle.registrationNumber}
+          onClose={() => setSelectedPreviewDoc(null)}
         />
       )}
 
