@@ -348,73 +348,23 @@ export default function VehicleDetailPage() {
                       </div>
                     )}
 
-                    {/* Visible Photo / PDF Thumbnail Container */}
-                    <div
-                      onClick={() => setSelectedPreviewDoc(uploadedDoc)}
-                      style={{
-                        width: '100%',
-                        height: '130px',
-                        background: '#090d16',
-                        borderRadius: '6px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        position: 'relative',
-                        marginBottom: '8px',
-                      }}
-                      title="Click to view full size"
-                    >
-                      {isPdf ? (
-                        <div style={{ textAlign: 'center', color: '#3b82f6' }}>
-                          <FileTextIcon size={36} />
-                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>PDF Document (Click to view)</div>
-                        </div>
-                      ) : uploadedDoc.fileUrl ? (
-                        <img
-                          src={uploadedDoc.fileUrl}
-                          alt={uploadedDoc.type}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            transition: 'transform 0.2s ease',
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
-                          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1.0)')}
-                        />
+                    {/* Document Description / Notes */}
+                    <div style={{
+                      fontSize: '12px',
+                      color: 'var(--color-text-muted)',
+                      lineHeight: 1.4,
+                      background: 'var(--color-surface)',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--color-border)',
+                      marginBottom: '8px',
+                    }}>
+                      {uploadedDoc.notes ? (
+                        <div>{uploadedDoc.notes}</div>
                       ) : (
-                        <div style={{ textAlign: 'center', color: 'var(--color-text-dim)' }}>
-                          <FileTextIcon size={32} />
-                          <div style={{ fontSize: '11px', marginTop: '4px' }}>No photo file</div>
-                        </div>
+                        <div>{slot.description}</div>
                       )}
-
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '6px',
-                        right: '6px',
-                        background: 'rgba(0,0,0,0.7)',
-                        backdropFilter: 'blur(4px)',
-                        color: '#ffffff',
-                        fontSize: '10px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '3px',
-                      }}>
-                        <EyeIcon size={11} /> Expand
-                      </div>
                     </div>
-
-                    {uploadedDoc.notes && (
-                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
-                        {uploadedDoc.notes}
-                      </div>
-                    )}
                   </div>
 
                   {/* Actions Row */}
@@ -424,7 +374,7 @@ export default function VehicleDetailPage() {
                       onClick={() => setSelectedPreviewDoc(uploadedDoc)}
                       style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                     >
-                      <EyeIcon size={13} /> View Full Size
+                      <EyeIcon size={13} /> View Document
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
