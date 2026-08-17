@@ -26,7 +26,6 @@ export const STATUTORY_DOCUMENT_SLOTS = [
     type: 'rc',
     title: 'Registration Certificate (RC Book)',
     shortName: 'RC Book',
-    icon: '📘',
     description: 'Vehicle ownership & registration record issued by RTO',
     mandatory: true,
   },
@@ -34,7 +33,6 @@ export const STATUTORY_DOCUMENT_SLOTS = [
     type: 'insurance',
     title: 'Vehicle Insurance Policy',
     shortName: 'Insurance Policy',
-    icon: '🛡️',
     description: 'Commercial vehicle comprehensive or third-party policy',
     mandatory: true,
   },
@@ -42,7 +40,6 @@ export const STATUTORY_DOCUMENT_SLOTS = [
     type: 'fitness',
     title: 'Fitness Certificate (FC)',
     shortName: 'Fitness Certificate',
-    icon: '📋',
     description: 'Mandatory technical roadworthiness certificate from RTO',
     mandatory: true,
   },
@@ -50,7 +47,6 @@ export const STATUTORY_DOCUMENT_SLOTS = [
     type: 'permit',
     title: 'Goods Carriage Permit',
     shortName: 'Goods Permit',
-    icon: '📜',
     description: 'National Permit or State authorization for commercial goods',
     mandatory: true,
   },
@@ -58,7 +54,6 @@ export const STATUTORY_DOCUMENT_SLOTS = [
     type: 'pollution',
     title: 'Pollution Under Control (PUC)',
     shortName: 'PUC Certificate',
-    icon: '🌿',
     description: 'Valid emission test compliance certificate',
     mandatory: true,
   },
@@ -66,7 +61,6 @@ export const STATUTORY_DOCUMENT_SLOTS = [
     type: 'road_tax',
     title: 'Road Tax Token',
     shortName: 'Road Tax',
-    icon: '🛣️',
     description: 'State / National highway commercial road tax receipt',
     mandatory: true,
   },
@@ -242,7 +236,7 @@ export default function VehicleDetailPage() {
               </span>
             </div>
             <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '3px' }}>
-              Statutory RTO &amp; Transport Authority documents required for national commercial dispatch
+              Statutory RTO and Transport Authority documents required for national commercial dispatch
             </div>
           </div>
 
@@ -343,7 +337,7 @@ export default function VehicleDetailPage() {
                     {/* Document Header */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span style={{ fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>{slot.icon}</span> {slot.title}
+                        <FileTextIcon size={15} color="#f97316" /> {slot.title}
                       </span>
                       {uploadedDoc.documentNumber && (
                         <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#f97316', fontWeight: 700 }}>
@@ -502,7 +496,7 @@ export default function VehicleDetailPage() {
                   {/* Slot Title & Missing Badge */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-text)' }}>
-                      <span>{slot.icon}</span> {slot.title}
+                      <FileTextIcon size={15} color="var(--color-text-muted)" /> {slot.title}
                     </span>
                   </div>
 
@@ -542,8 +536,8 @@ export default function VehicleDetailPage() {
         {/* ── Additional Fleet Documents (if any custom types uploaded) ── */}
         {additionalDocs.length > 0 && (
           <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '12px', color: 'var(--color-text)' }}>
-              📄 Additional Fleet Documents ({additionalDocs.length})
+            <h3 style={{ fontSize: '14px', fontWeight: 800, marginBottom: '12px', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FileTextIcon size={16} color="#3b82f6" /> Additional Fleet Documents ({additionalDocs.length})
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
               {additionalDocs.map((doc: any) => (
@@ -561,8 +555,8 @@ export default function VehicleDetailPage() {
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 800, marginBottom: '6px' }}>
-                      📄 {doc.type?.toUpperCase()}
+                    <div style={{ fontSize: '13px', fontWeight: 800, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FileTextIcon size={14} /> {doc.type ? doc.type.replace(/_/g, ' ').toUpperCase() : 'DOCUMENT'}
                     </div>
                     {doc.expiryDate && (
                       <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>

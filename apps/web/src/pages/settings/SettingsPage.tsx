@@ -4,7 +4,7 @@ import { useThemeStore } from '@store/theme.store';
 import {
   WrenchIcon, CheckIcon, BuildingIcon, DollarIcon,
   TruckIcon, ShieldIcon, FileTextIcon, BellIcon,
-  SlidersIcon, KeyIcon, LockIcon
+  SlidersIcon, KeyIcon, LockIcon, SunIcon, MoonIcon
 } from '@components/common/Icons';
 
 export default function SettingsPage() {
@@ -302,7 +302,7 @@ function ThemeSelectorCard() {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '14px' }}>
-            <span style={{ fontSize: '18px' }}>🌙</span> Dark Mode
+            <MoonIcon size={16} color="#f97316" /> Dark Mode
           </div>
           {theme === 'dark' && (
             <span style={{ fontSize: '10px', background: '#f97316', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>
@@ -332,7 +332,7 @@ function ThemeSelectorCard() {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '14px' }}>
-            <span style={{ fontSize: '18px' }}>☀️</span> Light Mode
+            <SunIcon size={16} color="#ea580c" /> Light Mode
           </div>
           {theme === 'light' && (
             <span style={{ fontSize: '10px', background: '#ea580c', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>

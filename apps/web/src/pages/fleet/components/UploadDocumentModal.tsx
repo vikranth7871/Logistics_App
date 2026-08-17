@@ -7,13 +7,13 @@ import {
 } from '@components/common/Icons';
 
 export const DOCUMENT_TYPES = [
-  { value: 'insurance', label: 'Insurance Policy', icon: '🛡️' },
-  { value: 'permit', label: 'National / State Goods Permit', icon: '📜' },
-  { value: 'fitness', label: 'Fitness Certificate (FC)', icon: '📋' },
-  { value: 'rc', label: 'Registration Certificate (RC Book)', icon: '📘' },
-  { value: 'road_tax', label: 'Road Tax Token', icon: '🛣️' },
-  { value: 'pollution', label: 'Pollution Under Control (PUC)', icon: '🌿' },
-  { value: 'other', label: 'Other Compliance Document', icon: '📄' },
+  { value: 'rc', label: 'Registration Certificate (RC Book)' },
+  { value: 'insurance', label: 'Vehicle Insurance Policy' },
+  { value: 'fitness', label: 'Fitness Certificate (FC)' },
+  { value: 'permit', label: 'National / State Goods Permit' },
+  { value: 'pollution', label: 'Pollution Under Control (PUC)' },
+  { value: 'road_tax', label: 'Road Tax Token' },
+  { value: 'other', label: 'Other Compliance Document' },
 ];
 
 interface UploadDocumentModalProps {
@@ -133,7 +133,7 @@ export default function UploadDocumentModal({
               >
                 {DOCUMENT_TYPES.map((d) => (
                   <option key={d.value} value={d.value}>
-                    {d.icon} {d.label}
+                    {d.label}
                   </option>
                 ))}
               </select>
