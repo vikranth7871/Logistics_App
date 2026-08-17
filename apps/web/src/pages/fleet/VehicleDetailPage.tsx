@@ -343,21 +343,56 @@ export default function VehicleDetailPage() {
                       </div>
                     )}
 
-                    {/* Document Description / Notes */}
+                    {/* Document Details / Issuing Agency Box */}
                     <div style={{
-                      fontSize: '12px',
-                      color: 'var(--color-text-muted)',
-                      lineHeight: 1.4,
                       background: 'var(--color-surface)',
-                      padding: '10px 12px',
-                      borderRadius: '6px',
+                      padding: '12px 14px',
+                      borderRadius: '8px',
                       border: '1px solid var(--color-border)',
-                      marginBottom: '8px',
+                      marginBottom: '10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
                     }}>
                       {uploadedDoc.notes ? (
-                        <div>{uploadedDoc.notes}</div>
+                        <>
+                          <div style={{
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.06em',
+                            color: 'var(--color-text-dim)',
+                          }}>
+                            Issuing Provider / Agency
+                          </div>
+                          <div style={{
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: 'var(--color-text)',
+                            textTransform: 'capitalize',
+                          }}>
+                            {uploadedDoc.notes}
+                          </div>
+                        </>
                       ) : (
-                        <div>{slot.description}</div>
+                        <>
+                          <div style={{
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.06em',
+                            color: 'var(--color-text-dim)',
+                          }}>
+                            Statutory Scope
+                          </div>
+                          <div style={{
+                            fontSize: '12px',
+                            color: 'var(--color-text)',
+                            lineHeight: 1.4,
+                          }}>
+                            {slot.description}
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -457,8 +492,29 @@ export default function VehicleDetailPage() {
                   </div>
 
                   {/* Description Box */}
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4, background: 'var(--color-surface2)', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)' }}>
-                    {slot.description}
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--color-text-muted)',
+                    lineHeight: 1.4,
+                    background: 'var(--color-surface2)',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                    marginBottom: '10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                  }}>
+                    <div style={{
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      color: 'var(--color-text-dim)',
+                    }}>
+                      Mandatory Statutory Scope
+                    </div>
+                    <div>{slot.description}</div>
                   </div>
                 </div>
 
