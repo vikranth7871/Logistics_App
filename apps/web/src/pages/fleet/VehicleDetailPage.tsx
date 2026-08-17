@@ -262,9 +262,9 @@ export default function VehicleDetailPage() {
             <div style={{
               width: `${compliancePercent}%`,
               height: '100%',
-              background: compliancePercent === 100
-                ? '#22c55e'
-                : 'linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)',
+              background: '#f97316',
+              borderRadius: '4px',
+              boxShadow: '0 0 8px rgba(249, 115, 22, 0.5)',
               transition: 'width 0.4s ease',
             }} />
           </div>
@@ -532,7 +532,7 @@ export default function VehicleDetailPage() {
                     padding: '8px',
                   }}
                 >
-                  <PlusIcon size={14} /> + Upload {slot.shortName}
+                  <PlusIcon size={14} /> Upload {slot.shortName}
                 </button>
               </div>
             );
