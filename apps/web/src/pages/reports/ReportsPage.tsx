@@ -402,79 +402,164 @@ export default function ReportsPage() {
       </div>
 
       {/* ── 5 Top KPI Cards with Previous-Period Comparison Badges ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '12px' }}>
         {/* Card 1: Total Revenue */}
-        <div className="kpi-card" style={{ padding: '14px', borderLeft: '4px solid #22c55e' }}>
+        <div
+          className="card"
+          style={{
+            padding: '16px',
+            background: 'var(--color-surface)',
+            borderLeft: '4px solid #22c55e',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Total Revenue</span>
-            <DollarIcon size={18} color="#22c55e" />
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Total Revenue</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(34, 197, 94, 0.12)', color: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <DollarIcon size={16} />
+            </div>
           </div>
-          <div className="kpi-val" style={{ fontSize: '20px', fontWeight: 800, color: '#22c55e', marginTop: '4px' }}>
-            ₹{totalRevenue.toLocaleString('en-IN')}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '4px' }}>
-            <span style={{ color: '#22c55e', fontWeight: 700 }}>↑ 18%</span>
-            <span style={{ color: 'var(--color-text-dim)' }}>vs previous month</span>
+          <div>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#22c55e', lineHeight: 1.1 }}>
+              ₹{totalRevenue.toLocaleString('en-IN')}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginTop: '6px' }}>
+              <span style={{ color: '#22c55e', fontWeight: 700, background: 'rgba(34, 197, 94, 0.12)', padding: '1px 6px', borderRadius: '4px' }}>
+                ↑ 18%
+              </span>
+              <span style={{ color: 'var(--color-text-dim)' }}>vs previous month</span>
+            </div>
           </div>
         </div>
 
         {/* Card 2: Fuel Expenses */}
-        <div className="kpi-card" style={{ padding: '14px', borderLeft: '4px solid #f59e0b' }}>
+        <div
+          className="card"
+          style={{
+            padding: '16px',
+            background: 'var(--color-surface)',
+            borderLeft: '4px solid #f59e0b',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Fuel Expenses</span>
-            <FuelIcon size={18} color="#f59e0b" />
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Fuel Expenses</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FuelIcon size={16} />
+            </div>
           </div>
-          <div className="kpi-val" style={{ fontSize: '20px', fontWeight: 800, color: '#f59e0b', marginTop: '4px' }}>
-            ₹{totalFuel.toLocaleString('en-IN')}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '4px' }}>
-            <span style={{ color: '#22c55e', fontWeight: 700 }}>↓ 8%</span>
-            <span style={{ color: 'var(--color-text-dim)' }}>vs previous month</span>
+          <div>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#f59e0b', lineHeight: 1.1 }}>
+              ₹{totalFuel.toLocaleString('en-IN')}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginTop: '6px' }}>
+              <span style={{ color: '#22c55e', fontWeight: 700, background: 'rgba(34, 197, 94, 0.12)', padding: '1px 6px', borderRadius: '4px' }}>
+                ↓ 8%
+              </span>
+              <span style={{ color: 'var(--color-text-dim)' }}>vs previous month</span>
+            </div>
           </div>
         </div>
 
         {/* Card 3: Operating Costs */}
-        <div className="kpi-card" style={{ padding: '14px', borderLeft: '4px solid #ef4444' }}>
+        <div
+          className="card"
+          style={{
+            padding: '16px',
+            background: 'var(--color-surface)',
+            borderLeft: '4px solid #ef4444',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Operating Costs</span>
-            <WrenchIcon size={18} color="#ef4444" />
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Operating Costs</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.12)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <WrenchIcon size={16} />
+            </div>
           </div>
-          <div className="kpi-val" style={{ fontSize: '20px', fontWeight: 800, color: '#ef4444', marginTop: '4px' }}>
-            ₹{totalOperating.toLocaleString('en-IN')}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '4px' }}>
-            <span style={{ color: '#22c55e', fontWeight: 700 }}>↓ 5%</span>
-            <span style={{ color: 'var(--color-text-dim)' }}>vs previous month</span>
+          <div>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#ef4444', lineHeight: 1.1 }}>
+              ₹{totalOperating.toLocaleString('en-IN')}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginTop: '6px' }}>
+              <span style={{ color: '#22c55e', fontWeight: 700, background: 'rgba(34, 197, 94, 0.12)', padding: '1px 6px', borderRadius: '4px' }}>
+                ↓ 5%
+              </span>
+              <span style={{ color: 'var(--color-text-dim)' }}>vs previous month</span>
+            </div>
           </div>
         </div>
 
         {/* Card 4: Net Operating Profit */}
-        <div className="kpi-card" style={{ padding: '14px', borderLeft: '4px solid #f97316' }}>
+        <div
+          className="card"
+          style={{
+            padding: '16px',
+            background: 'var(--color-surface)',
+            borderLeft: '4px solid #f97316',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Net Operating Profit</span>
-            <TrendingUpIcon size={18} color="#f97316" />
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Net Operating Profit</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(249, 115, 22, 0.12)', color: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingUpIcon size={16} />
+            </div>
           </div>
-          <div className="kpi-val" style={{ fontSize: '20px', fontWeight: 800, color: '#f97316', marginTop: '4px' }}>
-            ₹{netProfit.toLocaleString('en-IN')}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '4px' }}>
-            <span style={{ color: '#22c55e', fontWeight: 700 }}>↑ 22%</span>
-            <span style={{ color: 'var(--color-text-dim)' }}>Margin: 95.0%</span>
+          <div>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#f97316', lineHeight: 1.1 }}>
+              ₹{netProfit.toLocaleString('en-IN')}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginTop: '6px' }}>
+              <span style={{ color: '#22c55e', fontWeight: 700, background: 'rgba(34, 197, 94, 0.12)', padding: '1px 6px', borderRadius: '4px' }}>
+                ↑ 22%
+              </span>
+              <span style={{ color: 'var(--color-text-dim)' }}>Margin: 95.0%</span>
+            </div>
           </div>
         </div>
 
-        {/* Card 5: Fleet Utilization / Avg Rev Per Trip */}
-        <div className="kpi-card" style={{ padding: '14px', borderLeft: '4px solid #3b82f6' }}>
+        {/* Card 5: Fleet Utilization */}
+        <div
+          className="card"
+          style={{
+            padding: '16px',
+            background: 'var(--color-surface)',
+            borderLeft: '4px solid #3b82f6',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Fleet Utilization</span>
-            <TruckIcon size={18} color="#3b82f6" />
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600 }}>Fleet Utilization</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TruckIcon size={16} />
+            </div>
           </div>
-          <div className="kpi-val" style={{ fontSize: '20px', fontWeight: 800, color: '#3b82f6', marginTop: '4px' }}>
-            {fleetUtilization}%
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', marginTop: '4px' }}>
-            <span style={{ color: '#22c55e', fontWeight: 700 }}>12 of 17</span>
-            <span style={{ color: 'var(--color-text-dim)' }}>Lorries Active</span>
+          <div>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#3b82f6', lineHeight: 1.1 }}>
+              {fleetUtilization}%
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginTop: '6px' }}>
+              <span style={{ color: '#22c55e', fontWeight: 700, background: 'rgba(34, 197, 94, 0.12)', padding: '1px 6px', borderRadius: '4px' }}>
+                12 of 17
+              </span>
+              <span style={{ color: 'var(--color-text-dim)' }}>Lorries Active</span>
+            </div>
           </div>
         </div>
       </div>
