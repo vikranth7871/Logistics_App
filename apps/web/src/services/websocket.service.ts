@@ -13,14 +13,19 @@ class WebSocketService {
   connect() {
     const token = useAuthStore.getState().accessToken;
     if (!token) return;
+    if (this.socket?.connected) return;
+
+    if (this.socket) {
+      this.socket.disconnect();
+    }
 
     this.socket = io(`${this.WS_URL}/notifications`, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 30_000,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10_000,
     });
 
     this.socket.on('connect', () => {
@@ -32,7 +37,8 @@ class WebSocketService {
     });
 
     this.socket.on('connect_error', (err) => {
-      console.warn('WebSocket connection error:', err.message);
+      // Gracefully log without crashing
+      console.debug('WebSocket connection note:', err.message);
     });
   }
 
