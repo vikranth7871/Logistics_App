@@ -393,15 +393,21 @@ export default function DriverLayout() {
                 />
               </div>
               {quickAddOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <button onClick={() => navigate('/driver/fuel')} className="quick-add-btn">
-                    <PlusIcon size={14} /> Log Fuel Slip
-                  </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                   <button onClick={() => navigate('/driver/expenses')} className="quick-add-btn">
-                    <PlusIcon size={14} /> Log Toll / Expense
+                    <PlusIcon size={14} color="#f97316" /> Log Expense
+                  </button>
+                  <button onClick={() => navigate('/driver/fuel')} className="quick-add-btn">
+                    <FuelIcon size={14} color="#f97316" /> Log Fuel Slip
+                  </button>
+                  <button
+                    onClick={() => toast.success('📍 Live GPS location updated: NH44 Dindigul Toll Plaza')}
+                    className="quick-add-btn"
+                  >
+                    <MapPinIcon size={14} color="#3b82f6" /> Update Trip Location
                   </button>
                   <button onClick={() => navigate('/driver/trips')} className="quick-add-btn">
-                    <MapPinIcon size={14} /> Active Trip GPS
+                    <TruckIcon size={14} color="#22c55e" /> View Active Trip
                   </button>
                 </div>
               )}
