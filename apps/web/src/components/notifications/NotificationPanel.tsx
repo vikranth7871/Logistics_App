@@ -268,8 +268,14 @@ export function NotificationBellButton() {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const { data: unreadCount = 0 } = useUnreadCount();
+  const { data: unreadApiCount } = useUnreadCount();
+  const { data: notificationsData } = useNotifications(1);
   useRealtimeNotifications(); // Subscribes to real-time events & displays toast notifications
+
+  // Calculate actual unread count
+  const unreadCount = typeof unreadApiCount === 'number' && unreadApiCount > 0
+    ? unreadApiCount
+    : (notificationsData?.items || []).filter((n: any) => !n.isRead).length;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -295,12 +301,13 @@ export function NotificationBellButton() {
           <span
             className="notif-dot"
             style={{
-              background: 'var(--color-danger)',
-              width: '16px',
+              background: '#f97316',
+              minWidth: '16px',
               height: '16px',
-              borderRadius: '50%',
+              padding: '0 4px',
+              borderRadius: '10px',
               fontSize: '10px',
-              fontWeight: 700,
+              fontWeight: 800,
               color: '#fff',
               display: 'flex',
               alignItems: 'center',
@@ -308,6 +315,7 @@ export function NotificationBellButton() {
               position: 'absolute',
               top: '-4px',
               right: '-4px',
+              boxShadow: '0 0 8px rgba(249,115,22,0.6)',
             }}
           >
             {unreadCount > 9 ? '9+' : unreadCount}

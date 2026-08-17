@@ -3,9 +3,18 @@ import { useAuthStore } from '@store/auth.store';
 import { useExpenses, useCreateExpense, useTrips } from '@hooks/useERP';
 import { DollarIcon, PlusIcon, XIcon, ChevronLeftIcon, ChevronRightIcon } from '@components/common/Icons';
 
-const EXPENSE_CATEGORIES = [
-  'fuel', 'toll', 'food', 'loading', 'unloading', 'repair',
-  'tire', 'police_fine', 'other',
+const EXPENSE_CATEGORIES: { value: string; label: string }[] = [
+  { value: 'toll', label: 'Toll (FASTag / Cash)' },
+  { value: 'driver_allowance', label: 'Driver Allowance & Food' },
+  { value: 'repair', label: 'Vehicle Repair' },
+  { value: 'tyre_replacement', label: 'Tyre Replacement / Puncher' },
+  { value: 'spare_parts', label: 'Spare Parts' },
+  { value: 'loading_unloading', label: 'Loading / Unloading' },
+  { value: 'brokerage', label: 'Brokerage / Commission' },
+  { value: 'rto_fine', label: 'RTO / Police Fine' },
+  { value: 'weighbridge', label: 'Weighbridge Fee' },
+  { value: 'accommodation', label: 'Accommodation / Stay' },
+  { value: 'miscellaneous', label: 'Miscellaneous / Other' },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -22,7 +31,6 @@ export default function MyExpensesPage() {
   const { data, isLoading } = useExpenses({
     page,
     limit: 15,
-    // filter by current user's driver context
   });
 
   const expenses = data?.items || [];
@@ -87,7 +95,7 @@ export default function MyExpensesPage() {
                         background: 'rgba(99,102,241,0.1)', color: 'var(--color-primary)',
                         padding: '2px 8px', borderRadius: '4px', fontSize: '11px', textTransform: 'capitalize',
                       }}>
-                        {e.category?.replace('_', ' ')}
+                        {e.category?.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td style={{ maxWidth: '200px', fontSize: '13px' }}>{e.description || '—'}</td>
@@ -136,14 +144,13 @@ function ExpenseFormModal({ onClose }: { onClose: () => void }) {
   const createMutation = useCreateExpense();
   const { data: tripData } = useTrips({
     driverId: user?.driverId || undefined,
-    status: 'in_progress',
-    limit: 20,
+    limit: 50,
   });
   const trips = tripData?.items || [];
 
   const [form, setForm] = useState({
     tripId: '',
-    category: 'fuel',
+    category: 'toll',
     amount: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
@@ -184,9 +191,11 @@ function ExpenseFormModal({ onClose }: { onClose: () => void }) {
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Category *</label>
-                <select className="form-select" value={form.category} onChange={(e) => set('category', e.target.value)}>
+                <select className="form-select" required value={form.category} onChange={(e) => set('category', e.target.value)}>
                   {EXPENSE_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c.replace('_', ' ')}</option>
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -198,7 +207,7 @@ function ExpenseFormModal({ onClose }: { onClose: () => void }) {
             <div className="form-group">
               <label className="form-label">Amount (₹) *</label>
               <input
-                type="number" className="form-input" required min={0} step={0.01}
+                type="number" className="form-input" required min={1} step={0.01}
                 value={form.amount} onChange={(e) => set('amount', e.target.value)}
                 placeholder="0.00"
               />

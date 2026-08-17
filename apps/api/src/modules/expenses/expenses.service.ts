@@ -13,8 +13,11 @@ export class ExpensesService {
     private storageService: StorageService,
   ) {}
 
-  async findAll(query: PaginationDto & { category?: string; vehicleId?: string; tripId?: string; driverId?: string }, companyId: string) {
-    const { page = 1, limit = 20, category, vehicleId, tripId, driverId } = query;
+  async findAll(
+    query: PaginationDto & { category?: string; vehicleId?: string; tripId?: string; driverId?: string; recordedBy?: string },
+    companyId: string,
+  ) {
+    const { page = 1, limit = 20, category, vehicleId, tripId, driverId, recordedBy } = query;
 
     const qb = this.expenseRepo
       .createQueryBuilder('e')
@@ -27,9 +30,16 @@ export class ExpensesService {
     if (category) qb.andWhere('e.category = :category', { category });
     if (vehicleId) qb.andWhere('e.vehicleId = :vehicleId', { vehicleId });
     if (tripId) qb.andWhere('e.tripId = :tripId', { tripId });
-    if (driverId) qb.andWhere('e.driverId = :driverId', { driverId });
 
-    qb.orderBy('e.date', 'DESC')
+    if (driverId && recordedBy) {
+      qb.andWhere('(e.driverId = :driverId OR e.recordedBy = :recordedBy)', { driverId, recordedBy });
+    } else if (driverId) {
+      qb.andWhere('e.driverId = :driverId', { driverId });
+    } else if (recordedBy) {
+      qb.andWhere('e.recordedBy = :recordedBy', { recordedBy });
+    }
+
+    qb.orderBy('e.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -47,9 +57,28 @@ export class ExpensesService {
     return expense;
   }
 
-  async create(dto: CreateExpenseDto, companyId: string, userId: string) {
+  async create(dto: CreateExpenseDto, companyId: string, userId: string, defaultDriverId?: string) {
+    let vehicleId = dto.vehicleId;
+    let driverId = dto.driverId || defaultDriverId;
+
+    if (dto.tripId && (!vehicleId || !driverId)) {
+      const trip: any = await this.expenseRepo.manager
+        .createQueryBuilder()
+        .select(['t.vehicle_id as vehicle_id', 't.driver_id as driver_id'])
+        .from('trips', 't')
+        .where('t.id = :tripId', { tripId: dto.tripId })
+        .getRawOne();
+
+      if (trip) {
+        if (!vehicleId) vehicleId = trip.vehicle_id;
+        if (!driverId) driverId = trip.driver_id;
+      }
+    }
+
     const expense = this.expenseRepo.create({
       ...dto,
+      vehicleId,
+      driverId,
       companyId,
       recordedBy: userId,
     });

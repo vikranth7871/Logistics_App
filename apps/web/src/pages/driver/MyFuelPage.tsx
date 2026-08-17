@@ -12,8 +12,8 @@ export default function MyFuelPage() {
   const fuelEntries = data?.items || [];
   const meta = data?.meta || { total: 0, totalPages: 1 };
 
-  const totalLitres = fuelEntries.reduce((sum: number, f: any) => sum + Number(f.litres || 0), 0);
-  const totalCost = fuelEntries.reduce((sum: number, f: any) => sum + Number(f.totalCost || 0), 0);
+  const totalLitres = fuelEntries.reduce((sum: number, f: any) => sum + Number(f.fuelQuantityLiters || f.litres || 0), 0);
+  const totalCost = fuelEntries.reduce((sum: number, f: any) => sum + Number(f.totalAmount || f.totalCost || 0), 0);
 
   return (
     <div>
@@ -69,11 +69,11 @@ export default function MyFuelPage() {
                     <td style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 600 }}>
                       {f.vehicle?.registrationNumber || '—'}
                     </td>
-                    <td style={{ fontWeight: 600 }}>{Number(f.litres || 0).toFixed(1)}L</td>
-                    <td>₹{Number(f.pricePerLitre || 0).toFixed(2)}</td>
-                    <td style={{ fontWeight: 700 }}>₹{Number(f.totalCost || 0).toLocaleString('en-IN')}</td>
+                    <td style={{ fontWeight: 600 }}>{Number(f.fuelQuantityLiters || f.litres || 0).toFixed(1)}L</td>
+                    <td>₹{Number(f.pricePerLiter || f.pricePerLitre || 0).toFixed(2)}</td>
+                    <td style={{ fontWeight: 700 }}>₹{Number(f.totalAmount || f.totalCost || 0).toLocaleString('en-IN')}</td>
                     <td style={{ fontSize: '12px' }}>{f.odometerReading ? `${Number(f.odometerReading).toLocaleString()} km` : '—'}</td>
-                    <td style={{ fontSize: '12px', color: 'var(--color-text-dim)' }}>{f.fuelStation || '—'}</td>
+                    <td style={{ fontSize: '12px', color: 'var(--color-text-dim)' }}>{f.location || f.fuelStation || '—'}</td>
                   </tr>
                 ))
               )}
@@ -109,7 +109,7 @@ export default function MyFuelPage() {
 function FuelFormModal({ onClose }: { onClose: () => void }) {
   const createMutation = useCreateFuelEntry();
   const { data: vehicleData } = useVehicles({ limit: 50 });
-  const vehicles = vehicleData?.items || [];
+  const vehicles = Array.isArray(vehicleData?.items) ? vehicleData.items : Array.isArray(vehicleData) ? vehicleData : [];
 
   const [form, setForm] = useState({
     vehicleId: '',
@@ -122,16 +122,21 @@ function FuelFormModal({ onClose }: { onClose: () => void }) {
   });
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
-  const totalCost = (parseFloat(form.litres) || 0) * (parseFloat(form.pricePerLitre) || 0);
+  const litresNum = parseFloat(form.litres) || 0;
+  const priceNum = parseFloat(form.pricePerLitre) || 0;
+  const totalCost = litresNum * priceNum;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await createMutation.mutateAsync({
-      ...form,
-      litres: parseFloat(form.litres),
-      pricePerLitre: parseFloat(form.pricePerLitre),
-      totalCost,
-      odometerReading: form.odometerReading ? parseInt(form.odometerReading) : undefined,
+      vehicleId: form.vehicleId,
+      date: form.date,
+      fuelQuantityLiters: litresNum,
+      pricePerLiter: priceNum,
+      totalAmount: totalCost,
+      odometerReading: form.odometerReading ? parseFloat(form.odometerReading) : undefined,
+      location: form.fuelStation || undefined,
+      notes: form.notes || undefined,
     });
     onClose();
   };
@@ -163,12 +168,12 @@ function FuelFormModal({ onClose }: { onClose: () => void }) {
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Litres *</label>
-                <input type="number" className="form-input" required min={0} step={0.01} value={form.litres}
+                <input type="number" className="form-input" required min={0.01} step={0.01} value={form.litres}
                   onChange={(e) => set('litres', e.target.value)} placeholder="0.0" />
               </div>
               <div className="form-group">
                 <label className="form-label">Price per Litre (₹) *</label>
-                <input type="number" className="form-input" required min={0} step={0.01} value={form.pricePerLitre}
+                <input type="number" className="form-input" required min={0.01} step={0.01} value={form.pricePerLitre}
                   onChange={(e) => set('pricePerLitre', e.target.value)} placeholder="0.00" />
               </div>
             </div>
@@ -186,7 +191,7 @@ function FuelFormModal({ onClose }: { onClose: () => void }) {
                   onChange={(e) => set('odometerReading', e.target.value)} placeholder="e.g. 45200" />
               </div>
               <div className="form-group">
-                <label className="form-label">Fuel Station</label>
+                <label className="form-label">Fuel Station / Location</label>
                 <input className="form-input" value={form.fuelStation}
                   onChange={(e) => set('fuelStation', e.target.value)} placeholder="e.g. HP Petrol Bunk" />
               </div>

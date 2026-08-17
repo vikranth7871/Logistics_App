@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useTrip, useStartTrip, useDeliverTrip, useCompleteTrip, useUploadDeliveryProof, useUpdateTrip } from '@hooks/useERP';
 import { useState, useEffect } from 'react';
+import MarkDeliveredModal from './components/MarkDeliveredModal';
 import {
   TruckIcon,
   CheckCircleIcon,
@@ -38,6 +39,7 @@ export default function TripDetailPage() {
   const [odometer, setOdometer] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showProofModal, setShowProofModal] = useState(false);
+  const [showDeliverModal, setShowDeliverModal] = useState(false);
 
   useEffect(() => {
     if (trip) {
@@ -56,6 +58,35 @@ export default function TripDetailPage() {
     } else {
       await updateMutation.mutateAsync({ id: id!, data: { endOdometer: val } });
     }
+  };
+
+  const handleConfirmDelivery = async (data: {
+    tripId: string;
+    endOdometer: number;
+    deliveredAt: string;
+    receiverName?: string;
+    podFile?: File | null;
+    notes?: string;
+  }) => {
+    // 1. Update trip end odometer & notes
+    await updateMutation.mutateAsync({
+      id: data.tripId,
+      data: {
+        endOdometer: data.endOdometer,
+        notes: data.notes || trip?.notes,
+      },
+    });
+
+    // 2. Upload POD if file provided
+    if (data.podFile) {
+      await uploadProofMutation.mutateAsync({
+        id: data.tripId,
+        file: data.podFile,
+      });
+    }
+
+    // 3. Mark delivered
+    await deliverMutation.mutateAsync(data.tripId);
   };
 
   if (isLoading) return <div className="spinner-page"><div className="spinner" /></div>;
@@ -126,7 +157,7 @@ export default function TripDetailPage() {
               className="btn btn-primary"
               id="deliver-trip-btn"
               disabled={deliverMutation.isPending}
-              onClick={() => deliverMutation.mutate(id!)}
+              onClick={() => setShowDeliverModal(true)}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--color-warning)', borderColor: 'var(--color-warning)' }}
             >
               <CheckCircleIcon size={16} /> Mark Delivered
@@ -335,6 +366,15 @@ export default function TripDetailPage() {
       {/* Proof Lightbox Modal */}
       {showProofModal && trip.deliveryProofUrl && (
         <ProofModal url={trip.deliveryProofUrl} onClose={() => setShowProofModal(false)} />
+      )}
+
+      {/* Mark Delivered Modal */}
+      {showDeliverModal && (
+        <MarkDeliveredModal
+          trip={trip}
+          onClose={() => setShowDeliverModal(false)}
+          onConfirm={handleConfirmDelivery}
+        />
       )}
     </div>
   );

@@ -20,6 +20,7 @@ const BillingPage = lazy(() => import('./pages/billing/BillingPage'));
 const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
 const UsersPage = lazy(() => import('./pages/users/UsersPage'));
 const AuditPage = lazy(() => import('./pages/audit/AuditPage'));
+const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
 
 // ── Driver Portal pages ──────────────────────────────────────────────────────
 const DriverLayout = lazy(() => import('./components/layout/DriverLayout'));
@@ -83,9 +84,12 @@ function App() {
           <Route path="maintenance" element={<MaintenancePage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="billing" element={<BillingPage />} />
+          <Route path="payments" element={<BillingPage initialTab="payments" />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="users" element={<UsersPage />} />
+          <Route path="roles" element={<UsersPage initialTab="roles" />} />
           <Route path="audit" element={<AuditPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
 
         {/* ── Driver Portal ── */}

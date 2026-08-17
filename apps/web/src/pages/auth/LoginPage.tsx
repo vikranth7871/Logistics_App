@@ -121,7 +121,31 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: 'var(--color-text-dim)' }}>
+        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '8px', textAlign: 'center', fontWeight: 600 }}>
+            Demo Accounts (Click to autofill):
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ flex: 1, fontSize: '11px', justifyContent: 'center' }}
+              onClick={() => { setEmail('admin@lorryerp.com'); setPassword('Admin@123456'); }}
+            >
+              👑 Admin
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ flex: 1, fontSize: '11px', justifyContent: 'center' }}
+              onClick={() => { setEmail('driver@lorryerp.com'); setPassword('Driver@123456'); }}
+            >
+              🚚 Driver
+            </button>
+          </div>
+        </div>
+
+        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '12px', color: 'var(--color-text-dim)' }}>
           Need access? Contact your system administrator.
         </p>
       </div>

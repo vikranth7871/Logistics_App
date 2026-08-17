@@ -10,7 +10,11 @@ export const notificationsApi = {
   getUnreadCount: () =>
     apiClient
       .get('/notifications/unread-count')
-      .then((r) => (typeof r.data?.count === 'number' ? r.data.count : 0))
+      .then((r) => {
+        if (typeof r.data?.data?.count === 'number') return r.data.data.count;
+        if (typeof r.data?.count === 'number') return r.data.count;
+        return 0;
+      })
       .catch(() => 0),
 
   markRead: (id: string) =>

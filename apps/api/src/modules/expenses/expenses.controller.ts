@@ -26,9 +26,9 @@ export class ExpensesController {
     @Query() query: PaginationDto & { category?: string; vehicleId?: string; tripId?: string; driverId?: string },
     @CurrentUser() user: JwtPayload,
   ) {
-    // Drivers are auto-scoped to only their own expense records
-    const scopedQuery = user.role === 'driver' && user.driverId
-      ? { ...query, driverId: user.driverId }
+    // Drivers are auto-scoped to expenses where they are assigned or recorded by them
+    const scopedQuery = user.role === 'driver'
+      ? { ...query, driverId: user.driverId, recordedBy: user.sub }
       : query;
     return this.expensesService.findAll(scopedQuery, user.companyId);
   }
@@ -49,7 +49,8 @@ export class ExpensesController {
   @Roles(UserRole.ADMIN, UserRole.MANAGER, UserRole.ACCOUNTANT, UserRole.DRIVER)
   @ApiOperation({ summary: 'Record new expense' })
   create(@Body() dto: CreateExpenseDto, @CurrentUser() user: JwtPayload) {
-    return this.expensesService.create(dto, user.companyId, user.sub);
+    const defaultDriverId = user.role === 'driver' ? user.driverId : undefined;
+    return this.expensesService.create(dto, user.companyId, user.sub, defaultDriverId);
   }
 
   @Put(':id')

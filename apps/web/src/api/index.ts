@@ -99,6 +99,8 @@ export interface CreateTripDto {
   freightAmount?: number;
   loadDescription?: string;
   loadWeightTons?: number;
+  startOdometer?: number;
+  endOdometer?: number;
   notes?: string;
 }
 
@@ -247,8 +249,32 @@ export const expenseApi = {
       .then((r) => r.data.data);
   },
 
+  approveExpense: (id: string) =>
+    apiClient.post(`/expenses/${id}/approve`).then((r) => r.data.data),
+
   getSummary: () =>
     apiClient.get('/expenses/summary').then((r) => r.data.data),
+};
+
+// ─────────────────────────────────────────────────────────────────
+//  MAINTENANCE API
+// ─────────────────────────────────────────────────────────────────
+
+export const maintenanceApi = {
+  getMaintenanceRecords: (params?: any) =>
+    apiClient.get('/maintenance', { params }).then((r) => r.data.data),
+
+  getMaintenanceRecord: (id: string) =>
+    apiClient.get(`/maintenance/${id}`).then((r) => r.data.data),
+
+  createMaintenanceRecord: (data: any) =>
+    apiClient.post('/maintenance', data).then((r) => r.data.data),
+
+  updateMaintenanceRecord: (id: string, data: any) =>
+    apiClient.put(`/maintenance/${id}`, data).then((r) => r.data.data),
+
+  deleteMaintenanceRecord: (id: string) =>
+    apiClient.delete(`/maintenance/${id}`).then((r) => r.data.data),
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -275,6 +301,9 @@ export const customerApi = {
     apiClient
       .get(`/customers/${id}/statement`, { params: { from, to } })
       .then((r) => r.data.data),
+
+  deleteCustomer: (id: string) =>
+    apiClient.delete(`/customers/${id}`).then((r) => r.data.data),
 };
 
 // ─────────────────────────────────────────────────────────────────

@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import {
   fleetApi, tripApi, driverApi, fuelApi,
-  expenseApi, customerApi, billingApi, reportsApi,
+  expenseApi, maintenanceApi, customerApi, billingApi, reportsApi,
 } from '@api/index';
 import { getErrorMessage } from '@api/client';
 
@@ -376,6 +376,51 @@ export function useCustomers(params: any = {}) {
   });
 }
 
+export function useCustomer(id: string) {
+  return useQuery({
+    queryKey: QK.customers.detail(id),
+    queryFn: () => customerApi.getCustomer(id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useCreateCustomer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: customerApi.createCustomer,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Customer created successfully');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useUpdateCustomer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      customerApi.updateCustomer(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Customer updated successfully');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useDeleteCustomer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => customerApi.deleteCustomer(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Customer removed');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
 // ── FUEL ─────────────────────────────────────────────────────────────────
 
 export function useFuelEntries(params: any = {}) {
@@ -393,6 +438,32 @@ export function useCreateFuelEntry() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fuel'] });
       toast.success('Fuel entry recorded');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useUpdateFuelEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      fuelApi.updateFuelEntry ? fuelApi.updateFuelEntry(id, data) : Promise.resolve(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fuel'] });
+      toast.success('Fuel entry updated');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useDeleteFuelEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      fuelApi.deleteFuelEntry ? fuelApi.deleteFuelEntry(id) : Promise.resolve(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fuel'] });
+      toast.success('Fuel entry deleted');
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });
@@ -420,6 +491,98 @@ export function useCreateExpense() {
   });
 }
 
+export function useUpdateExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      expenseApi.updateExpense(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success('Expense updated');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useDeleteExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => expenseApi.deleteExpense(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success('Expense deleted');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useApproveExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => expenseApi.approveExpense(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success('Expense approved');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+// ── MAINTENANCE ───────────────────────────────────────────────────────────
+
+export function useMaintenanceRecords(params: any = {}) {
+  return useQuery({
+    queryKey: ['maintenance', 'list', params],
+    queryFn: () => maintenanceApi.getMaintenanceRecords(params),
+    staleTime: 60_000,
+  });
+}
+
+export function useMaintenanceRecord(id: string) {
+  return useQuery({
+    queryKey: ['maintenance', id],
+    queryFn: () => maintenanceApi.getMaintenanceRecord(id),
+    enabled: Boolean(id),
+  });
+}
+
+export function useCreateMaintenance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: maintenanceApi.createMaintenanceRecord,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['maintenance'] });
+      toast.success('Maintenance record created');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useUpdateMaintenance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      maintenanceApi.updateMaintenanceRecord(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['maintenance'] });
+      toast.success('Maintenance record updated');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useDeleteMaintenance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => maintenanceApi.deleteMaintenanceRecord(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['maintenance'] });
+      toast.success('Maintenance record deleted');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
 // ── BILLING ───────────────────────────────────────────────────────────────
 
 export function useInvoices(params: any = {}) {
@@ -430,6 +593,14 @@ export function useInvoices(params: any = {}) {
   });
 }
 
+export function useInvoiceDetail(id: string) {
+  return useQuery({
+    queryKey: QK.billing.detail(id),
+    queryFn: () => billingApi.getInvoice(id),
+    enabled: Boolean(id),
+  });
+}
+
 export function useCreateInvoice() {
   const qc = useQueryClient();
   return useMutation({
@@ -437,6 +608,19 @@ export function useCreateInvoice() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['invoices'] });
       toast.success('Invoice created');
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useRecordPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: billingApi.recordPayment,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Payment recorded successfully');
     },
     onError: (err) => toast.error(getErrorMessage(err)),
   });
