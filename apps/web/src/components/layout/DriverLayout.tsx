@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@store/auth.store';
+import { useThemeStore } from '@store/theme.store';
 import toast from 'react-hot-toast';
 import {
   DashboardIcon,
@@ -19,6 +20,8 @@ import {
   FileTextIcon,
   CheckCircleIcon,
   UserCheckIcon,
+  SunIcon,
+  MoonIcon,
 } from '@components/common/Icons';
 import { NotificationBellButton } from '@components/notifications/NotificationPanel';
 
@@ -32,6 +35,7 @@ const DRIVER_NAV = [
 
 export default function DriverLayout() {
   const { user, logout } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -83,7 +87,7 @@ export default function DriverLayout() {
             >
               <TruckIcon size={20} color="#ffffff" />
             </div>
-            <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text)', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
               Lorry Fleet ERP
             </span>
           </div>
@@ -172,8 +176,21 @@ export default function DriverLayout() {
           </div>
         </div>
 
-        {/* Topbar Right: Notification Bell (8), Calendar, Fullscreen, Driver Profile Dropdown */}
-        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        {/* Topbar Right: Theme Switcher, Notification Bell, Calendar, Fullscreen, Driver Profile Dropdown */}
+        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+          {/* Theme Switcher */}
+          <button
+            className="topbar-icon-btn"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            style={{
+              color: theme === 'dark' ? '#f59e0b' : '#ea580c',
+            }}
+          >
+            {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+          </button>
+
           <NotificationBellButton />
 
           <button
@@ -223,7 +240,7 @@ export default function DriverLayout() {
                 {initials}
               </div>
               <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', lineHeight: 1.2 }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
                   {user?.name || 'Selvam P'}
                 </span>
                 <span style={{ fontSize: '10px', color: '#22c55e', lineHeight: 1.2, fontWeight: 700 }}>
@@ -254,7 +271,7 @@ export default function DriverLayout() {
                   borderRadius: '8px',
                   boxShadow: 'var(--shadow-lg)',
                   zIndex: 1000,
-                  minWidth: '180px',
+                  minWidth: '200px',
                   overflow: 'hidden',
                 }}
               >
@@ -262,6 +279,38 @@ export default function DriverLayout() {
                   <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text)' }}>{user?.name || 'Selvam P'}</div>
                   <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{user?.email || 'driver@lorryerp.com'}</div>
                 </div>
+
+                {/* Theme toggle row */}
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '10px 14px',
+                    textAlign: 'left',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-text)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid var(--color-border)',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-surface2)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {theme === 'dark' ? <SunIcon size={14} color="#f59e0b" /> : <MoonIcon size={14} color="#ea580c" />}
+                    Theme: <strong style={{ textTransform: 'capitalize' }}>{theme} Mode</strong>
+                  </span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'var(--color-surface2)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
+                    Toggle
+                  </span>
+                </button>
+
                 <button
                   onClick={() => {
                     setShowUserDropdown(false);
@@ -308,27 +357,31 @@ export default function DriverLayout() {
                 >
                   <MapPinIcon size={14} /> My Assigned Trips
                 </button>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    padding: '10px 14px',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    borderTop: '1px solid var(--color-border)',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-surface2)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                >
-                  <LogOutIcon size={14} /> Log Out
-                </button>
+                <div style={{ borderTop: '1px solid var(--color-border)' }}>
+                  <button
+                    onClick={() => {
+                      setShowUserDropdown(false);
+                      handleLogout();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      padding: '10px 14px',
+                      textAlign: 'left',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-danger)',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                  >
+                    <LogOutIcon size={14} /> Sign Out
+                  </button>
+                </div>
               </div>
             )}
           </div>

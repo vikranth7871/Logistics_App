@@ -3,31 +3,32 @@
    Font: Inter (loaded via index.html)
 ───────────────────────────────────────────────────────────────── */
 
-:root {
-  /* Colour palette */
-  --color-bg:         #0d1117;
-  --color-surface:    #161b22;
-  --color-surface2:   #1c2333;
-  --color-border:     #30363d;
+:root,
+[data-theme="dark"] {
+  /* Colour palette (Dark Theme) */
+  --color-bg:           #0d1117;
+  --color-surface:      #161b22;
+  --color-surface2:     #1c2333;
+  --color-border:       #30363d;
   --color-border-light: #484f58;
 
   /* Accent */
-  --color-primary:    #f97316;   /* orange-500 */
-  --color-primary-hover: #ea6c0a;
-  --color-primary-dim: rgba(249,115,22,0.15);
-  --color-success:    #22c55e;
-  --color-warning:    #eab308;
-  --color-danger:     #ef4444;
-  --color-info:       #3b82f6;
+  --color-primary:      #f97316;   /* orange-500 */
+  --color-primary-hover:#ea6c0a;
+  --color-primary-dim:  rgba(249,115,22,0.15);
+  --color-success:      #22c55e;
+  --color-warning:      #eab308;
+  --color-danger:       #ef4444;
+  --color-info:         #3b82f6;
 
   /* Text */
-  --color-text:       #e6edf3;
-  --color-text-muted: #8b949e;
-  --color-text-dim:   #484f58;
+  --color-text:         #e6edf3;
+  --color-text-muted:   #8b949e;
+  --color-text-dim:     #484f58;
 
-  /* Sidebar */
-  --sidebar-width:    240px;
-  --topbar-height:    60px;
+  /* Sidebar & Topbar */
+  --sidebar-width:      240px;
+  --topbar-height:      60px;
 
   /* Misc */
   --radius-sm: 6px;
@@ -37,6 +38,34 @@
   --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
   --shadow-lg: 0 8px 40px rgba(0,0,0,0.6);
   --transition: 0.18s ease;
+}
+
+[data-theme="light"] {
+  /* Colour palette (Clean Light Slate Theme) */
+  --color-bg:           #f8fafc;   /* slate-50 */
+  --color-surface:      #ffffff;   /* pure white */
+  --color-surface2:     #f1f5f9;   /* slate-100 */
+  --color-border:       #e2e8f0;   /* slate-200 */
+  --color-border-light: #cbd5e1;   /* slate-300 */
+
+  /* Accent */
+  --color-primary:      #ea580c;   /* vibrant orange-600 */
+  --color-primary-hover:#c2410c;
+  --color-primary-dim:  rgba(234, 88, 12, 0.12);
+  --color-success:      #16a34a;
+  --color-warning:      #ca8a04;
+  --color-danger:       #dc2626;
+  --color-info:         #2563eb;
+
+  /* Text */
+  --color-text:         #0f172a;   /* slate-900 */
+  --color-text-muted:   #64748b;   /* slate-500 */
+  --color-text-dim:     #94a3b8;   /* slate-400 */
+
+  /* Shadows tailored for crisp light surfaces */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
 }
 
 *, *::before, *::after {
@@ -80,12 +109,12 @@ a:hover { text-decoration: underline; }
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--color-background);
+  background: var(--color-bg);
 }
 
 .topbar {
   height: 60px;
-  background: #0f172a;
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;

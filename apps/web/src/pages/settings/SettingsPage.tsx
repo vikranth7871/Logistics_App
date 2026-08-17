@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useThemeStore } from '@store/theme.store';
 import {
   WrenchIcon, CheckIcon, BuildingIcon, DollarIcon,
   TruckIcon, ShieldIcon, FileTextIcon, BellIcon,
@@ -246,7 +247,104 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* ── Panel 3: Appearance & Theme Customization ── */}
+        <div className="card" style={{ gridColumn: 'span 2', padding: '20px', background: 'var(--color-surface)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              background: 'rgba(59,130,246,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#3b82f6',
+            }}>
+              <SlidersIcon size={18} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: 800, margin: 0, color: 'var(--color-text)' }}>
+                Appearance &amp; Theme Customization
+              </h3>
+              <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                Choose the visual interface theme that suits your workplace lighting conditions
+              </div>
+            </div>
+          </div>
+
+          <ThemeSelectorCard />
+        </div>
+
       </form>
     </div>
   );
 }
+
+function ThemeSelectorCard() {
+  const { theme, setTheme } = useThemeStore();
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+      {/* Dark Theme Option */}
+      <div
+        onClick={() => setTheme('dark')}
+        style={{
+          border: theme === 'dark' ? '2px solid #f97316' : '1px solid var(--color-border)',
+          borderRadius: '10px',
+          padding: '16px',
+          background: '#0d1117',
+          color: '#e6edf3',
+          cursor: 'pointer',
+          position: 'relative',
+          transition: 'transform 0.15s, border-color 0.15s',
+          boxShadow: theme === 'dark' ? '0 0 0 3px rgba(249,115,22,0.2)' : 'none',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '14px' }}>
+            <span style={{ fontSize: '18px' }}>🌙</span> Dark Mode
+          </div>
+          {theme === 'dark' && (
+            <span style={{ fontSize: '10px', background: '#f97316', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>
+              ACTIVE
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: '12px', color: '#8b949e', lineHeight: 1.4 }}>
+          High-contrast slate dark theme designed for operations control rooms and night dispatching.
+        </div>
+      </div>
+
+      {/* Light Theme Option */}
+      <div
+        onClick={() => setTheme('light')}
+        style={{
+          border: theme === 'light' ? '2px solid #ea580c' : '1px solid var(--color-border)',
+          borderRadius: '10px',
+          padding: '16px',
+          background: '#ffffff',
+          color: '#0f172a',
+          cursor: 'pointer',
+          position: 'relative',
+          transition: 'transform 0.15s, border-color 0.15s',
+          boxShadow: theme === 'light' ? '0 0 0 3px rgba(234,88,12,0.2)' : 'none',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '14px' }}>
+            <span style={{ fontSize: '18px' }}>☀️</span> Light Mode
+          </div>
+          {theme === 'light' && (
+            <span style={{ fontSize: '10px', background: '#ea580c', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontWeight: 800 }}>
+              ACTIVE
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
+          Crisp, clean paper-white workspace theme optimized for bright daytime office environments and printing.
+        </div>
+      </div>
+    </div>
+  );
+}
+

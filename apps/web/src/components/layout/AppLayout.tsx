@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@store/auth.store';
+import { useThemeStore } from '@store/theme.store';
 import toast from 'react-hot-toast';
 import {
   DashboardIcon,
@@ -20,6 +21,8 @@ import {
   PlusIcon,
   ChevronDownIcon,
   MenuIcon,
+  SunIcon,
+  MoonIcon,
 } from '@components/common/Icons';
 import { NotificationBellButton } from '@components/notifications/NotificationPanel';
 import React, { useState } from 'react';
@@ -66,6 +69,7 @@ const NAV_ITEMS: { section: string; items: NavItem[] }[] = [
 
 export default function AppLayout() {
   const { user, logout } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const [quickAddOpen, setQuickAddOpen] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -115,55 +119,46 @@ export default function AppLayout() {
             >
               <TruckIcon size={20} color="#ffffff" />
             </div>
-            <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text)', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
               Lorry Fleet ERP
             </span>
           </div>
+        </div>
 
-          {/* Chevron Separator */}
-          <span style={{ color: 'var(--color-text-dim)', fontSize: '14px', margin: '0 2px', flexShrink: 0 }}>›</span>
-
-          {/* Hamburger Menu Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed((v) => !v)}
-            title="Toggle Sidebar"
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '6px',
-              border: '1px solid var(--color-border)',
-              background: 'var(--color-surface2)',
-              color: 'var(--color-text)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <MenuIcon size={16} />
-          </button>
-
-          {/* Global Search Input */}
-          <div className="global-search" style={{ position: 'relative', width: '300px', flexShrink: 0 }}>
+        {/* Topbar Center: Universal Search (Cmd+K style) */}
+        <div style={{ flex: 1, maxWidth: '420px', margin: '0 24px' }}>
+          <div style={{ position: 'relative', width: '100%' }}>
             <SearchIcon
-              size={14}
+              size={15}
               color="var(--color-text-muted)"
-              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
+              style={{
+                position: 'absolute',
+                left: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+              }}
             />
             <input
               type="text"
               placeholder="Search anything..."
               style={{
                 width: '100%',
+                padding: '7px 40px 7px 34px',
                 background: 'var(--color-surface2)',
                 border: '1px solid var(--color-border)',
                 borderRadius: '8px',
-                padding: '7px 38px 7px 34px',
                 color: 'var(--color-text)',
-                fontSize: '12px',
+                fontSize: '13px',
                 outline: 'none',
+                transition: 'var(--transition)',
+              }}
+              onFocus={(e) => (e.target.style.borderColor = 'var(--color-primary)')}
+              onBlur={(e) => (e.target.style.borderColor = 'var(--color-border)')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  navigate(`/trips?search=${encodeURIComponent(e.currentTarget.value)}`);
+                }
               }}
             />
             <span
@@ -185,8 +180,21 @@ export default function AppLayout() {
           </div>
         </div>
 
-        {/* Topbar Right: Notification Bell (8), Calendar, Fullscreen, User Profile */}
-        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        {/* Topbar Right: Theme Switcher, Notification Bell, Calendar, Fullscreen, User Profile */}
+        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+          {/* Theme Switcher Button */}
+          <button
+            className="topbar-icon-btn"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            style={{
+              color: theme === 'dark' ? '#f59e0b' : '#ea580c',
+            }}
+          >
+            {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+          </button>
+
           <NotificationBellButton />
 
           <button
@@ -236,7 +244,7 @@ export default function AppLayout() {
                 {initials}
               </div>
               <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', lineHeight: 1.2 }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text)', lineHeight: 1.2 }}>
                   {user?.name || 'System Admin'}
                 </span>
                 <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', lineHeight: 1.2 }}>
@@ -267,7 +275,7 @@ export default function AppLayout() {
                   borderRadius: '8px',
                   boxShadow: 'var(--shadow-lg)',
                   zIndex: 1000,
-                  minWidth: '180px',
+                  minWidth: '200px',
                   overflow: 'hidden',
                 }}
               >
@@ -279,6 +287,38 @@ export default function AppLayout() {
                     {user?.email || 'admin@lorryerp.com'}
                   </div>
                 </div>
+
+                {/* Theme toggle row in dropdown */}
+                <button
+                  onClick={() => {
+                    toggleTheme();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '10px 14px',
+                    textAlign: 'left',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-text)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid var(--color-border)',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-surface2)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {theme === 'dark' ? <SunIcon size={14} color="#f59e0b" /> : <MoonIcon size={14} color="#ea580c" />}
+                    Theme: <strong style={{ textTransform: 'capitalize' }}>{theme} Mode</strong>
+                  </span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: 'var(--color-surface2)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
+                    Toggle
+                  </span>
+                </button>
+
                 <button
                   onClick={() => {
                     setShowUserDropdown(false);
@@ -325,27 +365,31 @@ export default function AppLayout() {
                 >
                   <WrenchIcon size={14} /> System Settings
                 </button>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    padding: '10px 14px',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    borderTop: '1px solid var(--color-border)',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-surface2)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                >
-                  <LogOutIcon size={14} /> Log Out
-                </button>
+                <div style={{ borderTop: '1px solid var(--color-border)' }}>
+                  <button
+                    onClick={() => {
+                      setShowUserDropdown(false);
+                      handleLogout();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      padding: '10px 14px',
+                      textAlign: 'left',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-danger)',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+                  >
+                    <LogOutIcon size={14} /> Sign Out
+                  </button>
+                </div>
               </div>
             )}
           </div>
