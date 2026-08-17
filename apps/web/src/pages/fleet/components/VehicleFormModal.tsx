@@ -1,97 +1,117 @@
-import { useState } from 'react';
-import { useCreateVehicle } from '@hooks/useERP';
-import { getErrorMessage } from '@api/client';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useCreateVehicle, useUpdateVehicle } from '@hooks/useERP';
+import { TruckIcon, XIcon, CheckIcon } from '@components/common/Icons';
 
 interface Props {
+  vehicle?: any;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const FUEL_TYPES = ['diesel', 'petrol', 'cng', 'electric'];
 
-export default function VehicleFormModal({ onClose }: Props) {
-  const mutation = useCreateVehicle();
+export default function VehicleFormModal({ vehicle, onClose, onSuccess }: Props) {
+  const isEdit = Boolean(vehicle?.id);
+  const createMutation = useCreateVehicle();
+  const updateMutation = useUpdateVehicle(vehicle?.id || '');
 
   const [form, setForm] = useState({
-    registrationNumber: '',
-    make: '',
-    model: '',
-    year: '',
-    capacityTons: '',
-    fuelType: 'diesel',
-    engineNumber: '',
-    chassisNumber: '',
-    color: '',
-    notes: '',
+    registrationNumber: vehicle?.registrationNumber || '',
+    make: vehicle?.make || '',
+    model: vehicle?.model || '',
+    year: vehicle?.year ? String(vehicle.year) : '',
+    capacityTons: vehicle?.capacityTons ? String(vehicle.capacityTons) : '',
+    fuelType: vehicle?.fuelType || 'diesel',
+    engineNumber: vehicle?.engineNumber || '',
+    chassisNumber: vehicle?.chassisNumber || '',
+    color: vehicle?.color || '',
+    notes: vehicle?.notes || '',
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const set = (field: string, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const payload: any = {
+        ...form,
+        year: form.year ? parseInt(form.year) : undefined,
+        capacityTons: form.capacityTons ? parseFloat(form.capacityTons) : undefined,
+      };
 
-    await mutation.mutateAsync({
-      ...form,
-      year: form.year ? parseInt(form.year) : undefined,
-      capacityTons: form.capacityTons ? parseFloat(form.capacityTons) : undefined,
-    });
+      if (isEdit) {
+        await updateMutation.mutateAsync(payload);
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
 
-    onClose();
+      toast.success(isEdit ? 'Vehicle updated successfully' : 'Vehicle added to fleet');
+      onSuccess?.();
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save vehicle');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
+      <div className="modal" style={{ maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
-          <span className="modal-title" id="vehicle-modal-title">Add New Vehicle</span>
-          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <TruckIcon size={20} color="#f97316" />
+            <span className="modal-title">{isEdit ? `Edit Lorry ${vehicle?.registrationNumber}` : 'Add New Vehicle'}</span>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><XIcon size={18} /></button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-body">
+          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '20px' }}>
             <div className="form-group">
-              <label className="form-label" htmlFor="reg-number">
+              <label className="form-label">
                 Registration Number <span style={{ color: 'var(--color-danger)' }}>*</span>
               </label>
               <input
-                id="reg-number"
                 className="form-input"
-                style={{ textTransform: 'uppercase' }}
-                placeholder="e.g. TN01AB1234"
+                style={{ textTransform: 'uppercase', fontFamily: 'monospace', fontWeight: 700 }}
+                placeholder="e.g. TN72BT7517"
                 value={form.registrationNumber}
                 onChange={(e) => set('registrationNumber', e.target.value)}
                 required
               />
             </div>
 
-            <div className="form-row">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div className="form-group">
-                <label className="form-label" htmlFor="make">Make</label>
+                <label className="form-label">Make</label>
                 <input
-                  id="make"
                   className="form-input"
-                  placeholder="e.g. Tata"
+                  placeholder="e.g. Ashok Leyland / Tata"
                   value={form.make}
                   onChange={(e) => set('make', e.target.value)}
                 />
               </div>
               <div className="form-group">
-                <label className="form-label" htmlFor="model">Model</label>
+                <label className="form-label">Model</label>
                 <input
-                  id="model"
                   className="form-input"
-                  placeholder="e.g. Prima 5530.S"
+                  placeholder="e.g. 4220 / Prima"
                   value={form.model}
                   onChange={(e) => set('model', e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="form-row">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
               <div className="form-group">
-                <label className="form-label" htmlFor="year">Year</label>
+                <label className="form-label">Year</label>
                 <input
-                  id="year"
                   type="number"
                   className="form-input"
                   placeholder="2022"
@@ -102,64 +122,47 @@ export default function VehicleFormModal({ onClose }: Props) {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label" htmlFor="capacity">Capacity (Tons)</label>
+                <label className="form-label">Capacity (Tons)</label>
                 <input
-                  id="capacity"
                   type="number"
-                  step="0.5"
+                  step="0.1"
                   className="form-input"
-                  placeholder="25"
+                  placeholder="25.0"
                   value={form.capacityTons}
                   onChange={(e) => set('capacityTons', e.target.value)}
                 />
               </div>
-            </div>
-
-            <div className="form-row">
               <div className="form-group">
-                <label className="form-label" htmlFor="fuel-type">Fuel Type</label>
+                <label className="form-label">Fuel Type</label>
                 <select
-                  id="fuel-type"
                   className="form-select"
                   value={form.fuelType}
                   onChange={(e) => set('fuelType', e.target.value)}
                 >
-                  {FUEL_TYPES.map((f) => (
-                    <option key={f} value={f} style={{ textTransform: 'capitalize' }}>
-                      {f.charAt(0).toUpperCase() + f.slice(1)}
+                  {FUEL_TYPES.map((t) => (
+                    <option key={t} value={t} style={{ textTransform: 'capitalize' }}>
+                      {t.toUpperCase()}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="color">Color</label>
-                <input
-                  id="color"
-                  className="form-input"
-                  placeholder="White"
-                  value={form.color}
-                  onChange={(e) => set('color', e.target.value)}
-                />
-              </div>
             </div>
 
-            <div className="form-row">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div className="form-group">
-                <label className="form-label" htmlFor="engine-no">Engine Number</label>
+                <label className="form-label">Engine Number</label>
                 <input
-                  id="engine-no"
                   className="form-input"
-                  placeholder="Optional"
+                  placeholder="Engine serial number"
                   value={form.engineNumber}
                   onChange={(e) => set('engineNumber', e.target.value)}
                 />
               </div>
               <div className="form-group">
-                <label className="form-label" htmlFor="chassis-no">Chassis Number</label>
+                <label className="form-label">Chassis Number</label>
                 <input
-                  id="chassis-no"
                   className="form-input"
-                  placeholder="Optional"
+                  placeholder="Chassis VIN number"
                   value={form.chassisNumber}
                   onChange={(e) => set('chassisNumber', e.target.value)}
                 />
@@ -167,34 +170,43 @@ export default function VehicleFormModal({ onClose }: Props) {
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="notes">Notes</label>
+              <label className="form-label">Color</label>
+              <input
+                className="form-input"
+                placeholder="e.g. Yellow / Blue"
+                value={form.color}
+                onChange={(e) => set('color', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Operational Notes</label>
               <textarea
-                id="notes"
                 className="form-textarea"
-                placeholder="Any additional notes…"
+                rows={2}
+                placeholder="Special notes or cargo specialization..."
                 value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
               />
             </div>
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <div className="modal-footer" style={{ borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </button>
             <button
               type="submit"
               className="btn btn-primary"
-              id="vehicle-submit-btn"
-              disabled={mutation.isPending}
+              disabled={isSubmitting}
+              style={{ background: '#f97316', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px' }}
             >
-              {mutation.isPending ? (
-                <>
-                  <span className="spinner" style={{ width: '14px', height: '14px' }} />
-                  Creating…
-                </>
+              {isSubmitting ? (
+                <>Saving...</>
               ) : (
-                'Create Vehicle'
+                <>
+                  <CheckIcon size={16} /> {isEdit ? 'Save Changes' : 'Create Vehicle'}
+                </>
               )}
             </button>
           </div>
