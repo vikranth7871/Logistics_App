@@ -176,9 +176,9 @@ export default function VehicleDetailPage() {
             className="btn btn-primary btn-sm"
             id="upload-doc-btn-2"
             onClick={() => setShowUploadModal(true)}
-            style={{ background: '#f97316', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+            style={{ background: '#f97316', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px' }}
           >
-            <PlusIcon size={14} /> + Upload
+            <PlusIcon size={14} /> Upload
           </button>
         </div>
 
