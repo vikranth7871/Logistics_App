@@ -280,7 +280,7 @@ export default function VehicleDetailPage() {
         </div>
 
         {/* ── 6 Fixed Statutory Slots Grid ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '14px' }}>
           {STATUTORY_DOCUMENT_SLOTS.map((slot) => {
             const uploadedDoc = documents.find((d: any) => d.type === slot.type);
 
@@ -367,42 +367,65 @@ export default function VehicleDetailPage() {
                     </div>
                   </div>
 
-                  {/* Actions Row */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', paddingTop: '8px', borderTop: '1px solid var(--color-border)' }}>
+                  {/* Actions Row: 3 buttons aligned in 1 single row */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1.2fr 0.9fr 1.6fr',
+                    gap: '6px',
+                    paddingTop: '10px',
+                    borderTop: '1px solid var(--color-border)',
+                    width: '100%',
+                  }}>
                     <button
                       className="btn btn-secondary btn-sm"
                       onClick={() => setSelectedPreviewDoc(uploadedDoc)}
-                      style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      style={{
+                        fontSize: '11px',
+                        padding: '6px 4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        whiteSpace: 'nowrap',
+                      }}
                     >
-                      <EyeIcon size={13} /> View Document
+                      <EyeIcon size={12} /> View Document
                     </button>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => handleOpenUploadForSlot(slot.type)}
-                        title="Replace or renew document"
-                        style={{ fontSize: '11px', padding: '4px 8px' }}
-                      >
-                        Renew
-                      </button>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => handleRemoveAttachment(uploadedDoc)}
-                        title="Remove uploaded file from this slot"
-                        style={{
-                          fontSize: '11px',
-                          color: '#ef4444',
-                          borderColor: 'rgba(239,68,68,0.25)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '4px 8px',
-                        }}
-                      >
-                        <TrashIcon size={12} /> Remove Attachment
-                      </button>
-                    </div>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => handleOpenUploadForSlot(slot.type)}
+                      title="Replace or renew document"
+                      style={{
+                        fontSize: '11px',
+                        padding: '6px 4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Renew
+                    </button>
+
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => handleRemoveAttachment(uploadedDoc)}
+                      title="Remove uploaded file from this slot"
+                      style={{
+                        fontSize: '11px',
+                        color: '#ef4444',
+                        borderColor: 'rgba(239,68,68,0.25)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        padding: '6px 4px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <TrashIcon size={12} /> Remove Attachment
+                    </button>
                   </div>
 
                 </div>
